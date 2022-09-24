@@ -111,5 +111,5 @@ plast_conn.a_out.connect(lif_post.a_in)
 lif_post.s_out.connect(plast_conn.s_in_bap)
 
 
-st.sidebar.subtitle("Build apparently works?")
+st.sidebar.markdown("### Build apparently works?")
 
