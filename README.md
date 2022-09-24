@@ -3,8 +3,8 @@
   A Software Framework for Neuromorphic Computing
 </b></p>
 
-Interactive Application: 
-[https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/](https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/)
+
+[Interactive Application: ](https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/)
 
 # Overview
 
