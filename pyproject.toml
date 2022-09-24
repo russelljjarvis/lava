@@ -43,12 +43,13 @@ classifiers = [
 "Discussions" = "https://github.com/lava-nc/lava/discussions"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.11"
+python = ">=3.9, <3.11"
 
 numpy = "^1.22.2"
 scipy = "^1.8.0"
 networkx = "<=2.8"
 asteval = "^0.9.27"
+streamlit = "^1.10.0"
 
 [tool.poetry.dev-dependencies]
 matplotlib = "^3.5.1"
