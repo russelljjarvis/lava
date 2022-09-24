@@ -243,7 +243,7 @@ def plot_stdp(time, spikes_pre, spikes_post, wgt,
     # Derive learning window (positive part)
     w_pos = a_pos * np.exp(- x_pos / x1_tau)
     
-    plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(10, 5))
     
     plt.scatter(diff_t, diff_w, label="Weight changes", color="b")
     
@@ -255,8 +255,8 @@ def plot_stdp(time, spikes_pre, spikes_post, wgt,
     plt.ylabel('Weight change')
     plt.legend()
     plt.grid()
-    
-    plt.show()
+    st.pyplot(fig)
+    #plt.show()
 
 # Plot STDP window
 plot_stdp(time, np.where(pre_spikes[:, 0]), np.where(post_spikes[:, 0]), weights[:, 0], 
