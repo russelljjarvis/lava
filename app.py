@@ -1,42 +1,41 @@
 import streamlit as st
 
-#!/usr/bin/env python
-# coding: utf-8
 
-# *Copyright (C) 2022 Intel Corporation*<br>
-# *SPDX-License-Identifier: BSD-3-Clause*<br>
-# *See: https://spdx.org/licenses/*
-# 
-# ---
-# 
-# # Excitatory-Inhibitory Neural Network with Lava
+# Fix the randomness.
+np.random.seed(1234)
 
-# **Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). <br>
-# E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. <br>
+# Define dimensionality of the network.
+dim = 400
+shape = (dim,)
 
-# #### This tutorial assumes that you:
-# - have the [Lava framework installed](../in_depth/tutorial01_installing_lava.ipynb "Tutorial on Installing Lava")
-# - are familiar with the [Process concept in Lava](../in_depth/tutorial02_processes.ipynb "Tutorial on Processes")
-# 
-# #### This tutorial gives a high level view of
-# - how to implement simple E/I Network Lava Process
-# - how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
-# - how to use tags to chose between different ProcessModels when running the Process
-# - the principle adjustments needed to run bit-accurate ProcessModels
-# 
-# #### E/I Network
-# From bird's-eye view, an E/I network is a recurrently coupled network of neurons.<br>
-# Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
-# We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. <br>
-# Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the response properties of the network. <br>
-# In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. <br>
-# By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks.
-# <br>
-# Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels.<br>
+# We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
+num_neurons_exc = int(dim * 0.8)
+num_neurons_inh = dim - num_neurons_exc
 
-# #### General imports
+# Single neuron paramters.
+params_exc = {
+    "shape_exc": num_neurons_exc,
+    "dr_exc": 0.01,
+    "bias_exc": 0.1}
 
-# In[1]:
+params_inh = {
+    "shape_inh": num_neurons_inh,
+    "dr_inh": 0.01,
+    "bias_inh": 0.1}
+
+# Inhibition-exciation balance for scaling inhibitory weights to maintain balance (4 times as many excitatory neurons).
+g_factor = 4.5
+
+# Factor controlling the response properties.
+q_factor = 1
+
+# Parameters Paramters for E/I network.
+network_params_balanced = {}
+
+network_params_balanced.update(params_exc)
+network_params_balanced.update(params_inh)
+network_params_balanced['g_factor'] = g_factor
+network_params_balanced['q_factor'] = q_factor
 
 
 import numpy as np
@@ -53,6 +52,30 @@ from matplotlib import pyplot as plt
 from lava.magma.core.process.process import AbstractProcess
 from lava.magma.core.process.variable import Var
 from lava.magma.core.process.ports.ports import InPort, OutPort
+
+st.markdown("""
+
+# Excitatory-Inhibitory Neural Network with Lava
+
+**Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). <br>
+E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. <br>
+
+This tutorial gives a high level view of
+- how to implement simple E/I Network Lava Process
+- how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
+- how to use tags to chose between different ProcessModels when running the Process
+- the principle adjustments needed to run bit-accurate ProcessModels
+# #### E/I Network
+From bird's-eye view, an E/I network is a recurrently coupled network of neurons.<br>
+Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
+We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. <br>
+Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the response properties of the network. <br>
+In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. <br>
+By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks.
+Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels.<br>
+General imports
+""")
+
 
 
 # In[3]:
@@ -105,7 +128,7 @@ from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 # Import decorators.
 from lava.magma.core.decorator import implements, tag, requires
 
-
+st.markdown("""
 # ### Rate neurons
 # We next turn to the different implementations of the E/I Network.
 # We start with a rate network obeying the equation
@@ -121,8 +144,7 @@ from lava.magma.core.decorator import implements, tag, requires
 #     r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr
 # \end{equation}
 # Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
-
-# In[5]:
+""")
 
 
 from lava.magma.core.model.py.type import LavaPyType
@@ -223,44 +245,6 @@ class RateEINetworkModel(PyLoihiProcessModel):
 # Finally, we set a parameter that controls the response properties of the network by scaling up the recurrent weights, the `q_factor`.
 
 # In[6]:
-
-
-# Fix the randomness.
-np.random.seed(1234)
-
-# Define dimensionality of the network.
-dim = 400
-shape = (dim,)
-
-# We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
-num_neurons_exc = int(dim * 0.8)
-num_neurons_inh = dim - num_neurons_exc
-
-# Single neuron paramters.
-params_exc = {
-    "shape_exc": num_neurons_exc,
-    "dr_exc": 0.01,
-    "bias_exc": 0.1}
-
-params_inh = {
-    "shape_inh": num_neurons_inh,
-    "dr_inh": 0.01,
-    "bias_inh": 0.1}
-
-# Inhibition-exciation balance for scaling inhibitory weights to maintain balance (4 times as many excitatory neurons).
-g_factor = 4.5
-
-# Factor controlling the response properties.
-q_factor = 1
-
-# Parameters Paramters for E/I network.
-network_params_balanced = {}
-
-network_params_balanced.update(params_exc)
-network_params_balanced.update(params_inh)
-network_params_balanced['g_factor'] = g_factor
-network_params_balanced['q_factor'] = q_factor
-
 
 # Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
 
