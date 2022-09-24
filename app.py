@@ -27,7 +27,7 @@ elif SELECT_TAG == "floating_pt":
 vth = 240
 
 # Number of neurons per layer
-num_neurons = 1
+num_neurons = 2
 shape_lif = (num_neurons, )
 shape_conn = (num_neurons, num_neurons)
 
@@ -40,7 +40,7 @@ wgt_inp = np.eye(num_neurons) * 250
 wgt_plast_conn = np.full(shape_conn, 50)
     
 # Number of simulation time steps
-num_steps = 200
+num_steps = 100
 time = list(range(1, num_steps + 1))
 
 # Spike times
@@ -145,4 +145,120 @@ weights = mon_weight.get_data()['plastic_dense']['weights'][:, :, 0]
 # Stopping
 pattern_pre.stop()
 
-st.sidebar.markdown("results done...")
+st.sidebar.markdown("# results done..!")
+import matplotlib.pyplot as plt
+
+
+# Plotting pre- and post- spike arrival
+def plot_spikes(spikes, legend, colors):
+    offsets = list(range(1, len(spikes) + 1))
+    
+    plt.figure(figsize=(10, 3))
+    
+    spikes_plot = plt.eventplot(positions=spikes, 
+                                lineoffsets=offsets,
+                                linelength=0.9,
+                                colors=colors)
+    
+    plt.title("Spike arrival")
+    plt.xlabel("Time steps")
+    plt.ylabel("Neurons")
+    plt.yticks(ticks=offsets, labels=legend)
+    
+    plt.show()
+
+# Plot spikes
+plot_spikes(spikes=[np.where(post_spikes[:, 0])[0], np.where(pre_spikes[:, 0])[0]], 
+            legend=['Post', 'Pre'], 
+            colors=['#370665', '#f14a16'])
+
+
+# Plotting trace dynamics
+    
+def plot_time_series(time, time_series, ylabel, title):
+    plt.figure(figsize=(10, 1))
+    
+    plt.step(time, time_series)
+    
+    plt.title(title)
+    plt.xlabel("Time steps")
+    plt.ylabel(ylabel)
+    
+    plt.show()
+    
+# Plotting pre trace dynamics
+plot_time_series(time=time, time_series=pre_trace, ylabel="Trace value", title="Pre trace")
+# Plotting post trace dynamics
+plot_time_series(time=time, time_series=post_trace, ylabel="Trace value", title="Post trace")
+# Plotting weight dynamics
+plot_time_series(time=time, time_series=weights, ylabel="Weight value", title="Weight dynamics")
+
+
+def extract_stdp_weight_changes(time, spikes_pre, spikes_post, wgt):
+    # Compute the weight changes for every weight change event
+    w_diff = np.zeros(wgt.shape)
+    w_diff[1:] = np.diff(wgt)
+
+    w_diff_non_zero = np.where(w_diff != 0)
+    dw = w_diff[w_diff_non_zero].tolist()
+
+    # Find the absolute time of every weight change event
+    time = np.array(time)
+    t_non_zero = time[w_diff_non_zero]
+
+    # Compute the difference between post and pre synaptic spike time for every weight change event
+    spikes_pre = np.array(spikes_pre)
+    spikes_post = np.array(spikes_post)
+    dt = []
+    for i in range(0, len(dw)):
+        time_stamp = t_non_zero[i]
+        t_post = (spikes_post[np.where(spikes_post <= time_stamp)])[-1]
+        t_pre = (spikes_pre[np.where(spikes_pre <= time_stamp)])[-1]
+        dt.append(t_post-t_pre)
+
+    return np.array(dt), np.array(dw)
+    
+def plot_stdp(time, spikes_pre, spikes_post, wgt, 
+              on_pre_stdp, y1_impulse, y1_tau, 
+              on_post_stdp, x1_impulse, x1_tau):
+    # Derive weight changes as a function of time differences
+    diff_t, diff_w = extract_stdp_weight_changes(time, spikes_pre, spikes_post, wgt)
+    
+    # Derive learning rule coefficients
+    on_pre_stdp = eval(str(on_pre_stdp).replace("^", "**"))
+    a_neg = on_pre_stdp * y1_impulse
+    on_post_stdp = eval(str(on_post_stdp).replace("^", "**"))
+    a_pos = on_post_stdp * x1_impulse
+    
+    # Derive x-axis limit (absolute value)
+    max_abs_dt = np.maximum(np.abs(np.max(diff_t)), np.abs(np.min(diff_t)))
+    
+    # Derive x-axis for learning window computation (negative part)
+    x_neg = np.linspace(-max_abs_dt, 0, 1000)
+    # Derive learning window (negative part)
+    w_neg = a_neg * np.exp(x_neg / y1_tau)
+    
+    # Derive x-axis for learning window computation (positive part)
+    x_pos = np.linspace(0, max_abs_dt, 1000)
+    # Derive learning window (positive part)
+    w_pos = a_pos * np.exp(- x_pos / x1_tau)
+    
+    plt.figure(figsize=(10, 5))
+    
+    plt.scatter(diff_t, diff_w, label="Weight changes", color="b")
+    
+    plt.plot(x_neg, w_neg, label="W-", color="r")
+    plt.plot(x_pos, w_pos, label="W+", color="g")
+    
+    plt.title("STDP weight changes - Learning window")
+    plt.xlabel('t_post - t_pre')
+    plt.ylabel('Weight change')
+    plt.legend()
+    plt.grid()
+    
+    plt.show()
+
+# Plot STDP window
+plot_stdp(time, np.where(pre_spikes[:, 0]), np.where(post_spikes[:, 0]), weights[:, 0], 
+          stdp.A_plus, stdp.y1_impulse, stdp.tau_plus, 
+          stdp.A_minus, stdp.x1_impulse, stdp.tau_minus)
