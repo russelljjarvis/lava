@@ -1,3 +1,5 @@
+import streamlit as st
+
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -352,11 +354,12 @@ network_balanced.stop()
 # In[ ]:
 
 
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Time Step')
 plt.ylabel('State value')
 plt.plot(states_balanced[:, :50])
-plt.show()
+st.pyplot(fig)
+#plt.show()
 
 
 # We observe that after an initial period the network settles in a fixed point.<br>
