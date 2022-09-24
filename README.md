@@ -1,11 +1,10 @@
-![image](https://user-images.githubusercontent.com/68661711/135301797-400e163d-71a3-45f8-b35f-e849e8c74f0c.png)
-
 
 <p align="center"><b>
   A Software Framework for Neuromorphic Computing
 </b></p>
 
-Interactive Application: ![https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/](https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/)
+Interactive Application: 
+[https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/](https://russelljjarvis-lava-app-h64zo3.streamlitapp.com/)
 
 # Overview
 
