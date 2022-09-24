@@ -5,7 +5,7 @@ import streamlit as st
 np.random.seed(1234)
 
 # Define dimensionality of the network.
-dim = 400
+dim = 400/8
 shape = (dim,)
 
 # We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
