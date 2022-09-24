@@ -11,6 +11,7 @@ from lava.proc.lif.process import LIF
 from lava.proc.io.source import RingBuffer
 from lava.proc.dense.process import LearningDense as Dense
 
+st.sidebar.subtitle("Build apparently works?")
 
 # Set this tag to "fixed_pt" or "floating_pt" to choose the corresponding models.
 SELECT_TAG = "floating_pt"
@@ -110,5 +111,5 @@ plast_conn.a_out.connect(lif_post.a_in)
 lif_post.s_out.connect(plast_conn.s_in_bap)
 
 
-st.title("Build apparently works?")
+st.sidebar.subtitle("Build apparently works?")
 
