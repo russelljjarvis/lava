@@ -1,6 +1,11 @@
+
+# Import Process level primitives.
+from lava.magma.core.process.process import AbstractProcess
+from lava.magma.core.process.variable import Var
+from lava.magma.core.process.ports.ports import InPort, OutPort
 import streamlit as st
 st.title("built...")
-
+import numpy as np
 # Fix the randomness.
 np.random.seed(1234)
 
@@ -48,10 +53,6 @@ from matplotlib import pyplot as plt
 # In[2]:
 
 
-# Import Process level primitives.
-from lava.magma.core.process.process import AbstractProcess
-from lava.magma.core.process.variable import Var
-from lava.magma.core.process.ports.ports import InPort, OutPort
 st.sidebar.markdown("Inports worked...")
 
 st.markdown("""
