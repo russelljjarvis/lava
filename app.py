@@ -8,6 +8,17 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.model import AbstractProcessModel
 
+
+# Import parent classes for ProcessModels for Hierarchical Processes.
+from lava.magma.core.model.py.model import PyLoihiProcessModel
+from lava.magma.core.model.sub.model import AbstractSubProcessModel
+
+# Import execution protocol.
+from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
+
+# Import decorators.
+from lava.magma.core.decorator import implements, tag, requires
+
 from scipy.special import erf
 
 import streamlit as st
@@ -22,7 +33,6 @@ from lava.proc.monitor.process import Monitor
 # Configurations for execution.
 num_steps = 1000
 
-st.title("built...")
 
 # Define dimensionality of the network.
 dim = 110
@@ -63,12 +73,6 @@ network_params_balanced['q_factor'] = q_factor
 
 st.markdown(""" E/I Network Lava Process
  We define the structure of the E/I Network Lava Process class. <br>
-""")
-
-st.sidebar.markdown("Inports worked...")
-
-st.markdown("""
-
 Excitatory-Inhibitory Neural Network with Lava
 
 **Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). <br>
@@ -125,18 +129,6 @@ class EINetwork(AbstractProcess):
 
 # #### ProcessModels for Python execution
 
-# In[4]:
-
-
-# Import parent classes for ProcessModels for Hierarchical Processes.
-from lava.magma.core.model.py.model import PyLoihiProcessModel
-from lava.magma.core.model.sub.model import AbstractSubProcessModel
-
-# Import execution protocol.
-from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
-
-# Import decorators.
-from lava.magma.core.decorator import implements, tag, requires
 
 st.markdown("""
 Rate neurons
@@ -235,21 +227,15 @@ class RateEINetworkModel(PyLoihiProcessModel):
         self.outport.send(self.state)
         
 
-
-# #### Defining the parameters for the network
-# Next, we need to constrain the network with the needed parameters. <br>
-# First, we define the dimensionality of the network which we identify with the total number of neurons as well as the single neuron parameters.<br>
-# We here follow the common choice that the ratio between the number of excitatory and inhibitory neurons equals $4$ and that the connection probability between two arbitrary neurons is identical. <br>
-# The recurrent weights must *balance* the network, i.e. the average recurrent input to a neuron must be less or equal than $0$.<br>
-# This implies that we need to increase the strength of the inhibitory weights, the `g_factor`, to at least $4$. We choose $4.5$ to unambiguously place the network in the inhibition dominated regime. <br>
-# Finally, we set a parameter that controls the response properties of the network by scaling up the recurrent weights, the `q_factor`.
-
-# In[6]:
-
-# Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
-
-# In[7]:
-
+st.markdown("""Defining the parameters for the network
+ Next, we need to constrain the network with the needed parameters. <br>
+ First, we define the dimensionality of the network which we identify with the total number of neurons as well as the single neuron parameters.<br>
+ We here follow the common choice that the ratio between the number of excitatory and inhibitory neurons equals $4$ and that the connection probability between two arbitrary neurons is identical. <br>
+ The recurrent weights must *balance* the network, i.e. the average recurrent input to a neuron must be less or equal than $0$.<br>
+ This implies that we need to increase the strength of the inhibitory weights, the `g_factor`, to at least $4$. We choose $4.5$ to unambiguously place the network in the inhibition dominated regime. <br>
+ Finally, we set a parameter that controls the response properties of the network by scaling up the recurrent weights, the `q_factor`.
+ Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
+""")
 
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     '''Generate connectivity drawn from a Gaussian distribution with mean 0
@@ -334,29 +320,23 @@ plt.xlabel('Time Step')
 plt.ylabel('State value')
 plt.plot(states_balanced[:, :50])
 st.pyplot(fig)
-#plt.show()
 
+st.markdown("""
+ We observe that after an initial period the network settles in a fixed point.<br>
+ As it turns out, this is a global stable fixed point of the network dynamics: If we applied a small perturbation, the network would return to the stable state.<br>
+ Such a network is unfit for performing meaningful computations, the dynamics is low-dimensional and rather poor.<br>
+ To better understand this, we apply an additional analysis.
 
-# We observe that after an initial period the network settles in a fixed point.<br>
-# As it turns out, this is a global stable fixed point of the network dynamics: If we applied a small perturbation, the network would return to the stable state.<br>
-# Such a network is unfit for performing meaningful computations, the dynamics is low-dimensional and rather poor.<br>
-# To better understand this, we apply an additional analysis.
-
-# #### Further analysis
-# We introduce the *auto-correlation function* $c(\tau)$. <br>
-# With this function, one can assess the *memory* of the network as well as the richness of the dynamics. <br>
-# Denoting the (temporally averaged) network activity by $a$, the *auto-covariance function* is the variance (here denoted $\mathrm{Cov}(\cdot, \cdot)$) of $a$ with a time shifted version of itself:
-# \begin{equation}
-#     c(\tau) = \mathrm{Cov}(a(t), a(t+\tau))
-# \end{equation}
-# This means for positive $\tau$ the value of the auto-covariance function gives a measure for the similarity of the network state $a(t)$ and $a(t+\tau)$. <br>
-# By comparing $c(\tau)$ with $c(0)$, we may assess the *memory* a network has of its previous states after $\tau$ time steps.<br>
-# Note that the auto-covariance function is not normalised!<br>
-# Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
-
-# In[ ]:
-
-
+ Further analysis
+ We introduce the *auto-correlation function* $c(\tau)$. <br>
+ With this function, one can assess the *memory* of the network as well as the richness of the dynamics. <br>
+ Denoting the (temporally averaged) network activity by $a$, the *auto-covariance function* is the variance (here denoted $\mathrm{Cov}(\cdot, \cdot)$) of $a$ with a time shifted version of itself:
+ $\begin{equation} c(\tau) = \mathrm{Cov}(a(t), a(t+\tau))\end{equation}$
+This means for positive $\tau$ the value of the auto-covariance function gives a measure for the similarity of the network state $a(t)$ and $a(t+\tau)$. <br>
+By comparing $c(\tau)$ with $c(0)$, we may assess the *memory* a network has of its previous states after $\tau$ time steps.<br>
+Note that the auto-covariance function is not normalised!<br>
+Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
+""")
 def auto_cov_fct(acts, max_lag=100, offset=200):
     """Auto-correlation function of parallel spike trains.
     
@@ -393,29 +373,27 @@ def auto_cov_fct(acts, max_lag=100, offset=200):
     return lags, auto_corr_fct
 
 
-# In[ ]:
-
 
 lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
 # Plotting the auto-correlation function.
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Lag')
 plt.ylabel('Covariance')
 plt.plot(lags, ac_fct_balanced)
-plt.show()
 
+st.pyplot(fig)
 
-# As expected, there is covariance has its maximum at a time lag of $0$. <br>
-# Examining the covariance function, we first note its values are small ($<<1$) implying low dimensional dynamics of the network. <br>
-# This fits our observation made above on the grounds of the display of the time-resolved activity. <br>
+st.markdown("""
+As expected, there is covariance has its maximum at a time lag of $0$. <br>
+Examining the covariance function, we first note its values are small ($<<1$) implying low dimensional dynamics of the network. <br>
+This fits our observation made above on the grounds of the display of the time-resolved activity. <br>
 
-# #### Controlling the network
-# We saw that the states of the neurons quickly converged to a globally stable fixed point.<br>
-# The reason for this fixed point is, that the dampening part dominates the dynamical behavior - we need to increase the weights! <br>
-# This we can achieve by increasing the `q_factor`.
-
-# In[ ]:
+# Controlling the network
+ We saw that the states of the neurons quickly converged to a globally stable fixed point.<br>
+ The reason for this fixed point is, that the dampening part dominates the dynamical behavior - we need to increase the weights! <br>
+ This we can achieve by increasing the `q_factor`.
+""")
 
 
 # Defining new, larger q_factor.
@@ -447,30 +425,31 @@ states_critical = state_monitor.get_data()[network_critical.name][network_critic
 network_critical.stop()
 
 
-# In[ ]:
 
-
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Time Step')
 plt.ylabel('State value')
 plt.plot(states_critical[:, :50])
-plt.show()
+st.pyplot(fig)#plt.show()
 
 
-# We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
-# The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
-
+st.markdown("""
+We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
+ The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
+""")
 # In[ ]:
 
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
 
 # Plotting the auto-correlation function.
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Lag')
 plt.ylabel('Correlation')
 plt.plot(lags, ac_fct_critical)
-plt.show()
+st.pyplot(fig)#plt.show()
+
+#plt.show()
 
 
 # We moreover see that for positive time lags the auto-covariance function still is large. <br>
@@ -677,7 +656,7 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
 
 
 fig = raster_plot(spks=spks_balanced)
-
+st.pyplot(fig)
 
 # After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
 # Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
@@ -713,7 +692,8 @@ ax2.set_title('Mean rate of LIF network')
 ax2.plot(timesteps,
          (binned_sps_balanced - np.mean(binned_sps_balanced, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
 ax2.set_xlabel('Time Step')
-plt.show()
+st.pyplot(f)
+#plt.show()
 
 
 # Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
@@ -725,11 +705,11 @@ plt.show()
 lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
 
 # Plotting the auto-covariance function.
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Lag')
 plt.ylabel('Covariance')
 plt.plot(lags, ac_fct)
-
+st.pyplot(fig)
 
 # Examining the auto-covariance function, we first note that again the overall values are small. Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.<br>
 # This means that the network has no memory of its previous states: Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. <br>
@@ -772,7 +752,7 @@ lif_network_critical.stop()
 
 
 fig = raster_plot(spks=spks_critical)
-
+st.pyplot(fig)
 
 # Here we see a qualitatively different network activity where the recurrent connections play a more dominant role: <br>
 # At seemingly random times, single neurons enter an active states of variable length. <br>
@@ -824,6 +804,7 @@ ax2.set_title('Auto-Cov function: Rate network')
 ax2.set_xlabel('Lag')
 ax2.set_ylabel('Covariance')
 plt.tight_layout()
+st.pyplot(f)
 
 
 # We observe in the auto-covariance function of the LIF network a slowly decay, akin to the rate network. <br>
@@ -917,7 +898,8 @@ ax2.hist(act_tot_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='
 ax2.legend()
 
 plt.tight_layout()
-plt.show()
+st.pyplot(f)
+#plt.show()
 
 
 # Next, we plot the distribution of the temporal average:
@@ -943,7 +925,8 @@ ax2.hist(act_tot_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label=
 ax2.legend()
 
 plt.tight_layout()
-plt.show()
+#plt.show()
+st.pyplot(f)
 
 
 # We first note that the the total activation is close to zero with a slight shift to negative values, this prevents the divergence of activity. <br>
@@ -970,7 +953,9 @@ for i in range(3):
     ax2.plot(time_steps, act_tot_critical[i], alpha=0.7)
 
 plt.tight_layout()
-plt.show()
+st.pyplot(f)
+
+#plt.show()
 
 
 # We see that the temporal evolution of the total activation in the low weights case is much narrower than in the high weights network. <br>
@@ -1114,7 +1099,9 @@ ax2.hist(data_v_critical.flatten(), bins='auto', density=True)
 ax2.legend()
 
 plt.tight_layout()
-plt.show()
+st.pyplot(f)
+
+#plt.show()
 
 
 # We note that for both variables the distributions attain large (small) values with low probability. We hence will remove them in the dynamical range to increase the precision of the overall representation. We do so by choosing $0.2$ and $0.8$ quantiles as minimal resp. maximal values for the dynamic ranges.<br>
@@ -1211,7 +1198,9 @@ lif_network_critical_fixed.stop()
 
 fig = raster_plot(spks=spks_critical, color='orange', alpha=0.3)
 raster_plot(spks=spks_critical_fixed, fig=fig, alpha=0.3, color='b')
-plt.show()
+st.pyplot(fig)
+
+#plt.show()
 
 
 # Comparing the spike times after the parameter conversion, we find that after the first initial time steps, the spike times start diverging, even though certain structural similarities remain. <br>
@@ -1244,20 +1233,23 @@ ax2.plot(timesteps,
          (binned_sps_critical_fixed
           - np.mean(binned_sps_critical_fixed, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
 ax2.set_xlabel('Time Step')
-plt.show()
+#plt.show()
+st.pyplot(f)
 
 
 # In[ ]:
 
 
 # Plotting the auto-correlation function.
-plt.figure(figsize=(7,5))
+fig = plt.figure(figsize=(7,5))
 plt.xlabel('Lag')
 plt.ylabel('Covariance')
 plt.plot(lags, ac_fct_lif_critical_fixed, label='Bit accurate model')
 plt.plot(lags, ac_fct_lif_critical, label='Floating point model')
 plt.legend()
-plt.show()
+#plt.show()
+st.pyplot(fig)
+
 
 
 # ## How to learn more?
