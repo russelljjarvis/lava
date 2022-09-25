@@ -295,9 +295,8 @@ network_params_balanced['weights'] = generate_gaussian_weights(dim,
                                                                network_params_balanced['g_factor'])
 
 
-# #### Execution and Results
+st.markdown("Execution and Results")
 
-# In[ ]:
 
 rcfg = Loihi1SimCfg(select_tag='rate_neurons')
 run_cond = RunSteps(num_steps=num_steps)
@@ -314,10 +313,9 @@ states_balanced = state_monitor.get_data()[network_balanced.name][network_balanc
 network_balanced.stop()
 
 
-# #### Visualizing the activity
-# We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
-
-# In[ ]:
+st.markdown("""Visualizing the activity
+We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
+""")
 
 
 fig = plt.figure(figsize=(7,5))
@@ -442,7 +440,6 @@ st.markdown("""
 We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
  The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
 """)
-# In[ ]:
 
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
@@ -457,17 +454,17 @@ st.pyplot(fig)#plt.show()
 #plt.show()
 
 
-# We moreover see that for positive time lags the auto-covariance function still is large. <br>
-# This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
-# Such a network can perform meaningful computations.
+st.markdown("""We moreover see that for positive time lags the auto-covariance function still is large. <br>
+This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
+Such a network can perform meaningful computations.
 
-# ### LIF Neurons
-# We now turn to a E/I networks implementing its dynamic behavior with leaky integrate-and-fire neurons. <br>
-# For this, we harness the concepts of Hierarchical Lava Processes and SubProcessModels. These allow us to avoid implementing everything ourselves, but rather to use already defined Processes and their ProcessModels to build more complicated programs. <br>
-# We here use the behavior defined for the [LIF](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") and [Dense](https://github.com/lava-nc/lava/tree/main/src/lava/proc/dense "Lava's Dense Connectivity") Processes, we define the behavior of the E/I Network Process. <br>
-# Moreover, we would like to place the LIF E/I network in a similar dynamical regime as the rate network. This is a difficult task since the underlying single neurons dynamics are quite different. We here provide an approximate conversion function that allows for a parameter mapping and especially qualitatively retains properties of the auto-covariance function. <br>
-# With the implementation below, we may either pass LIF specific parameters directly  **or** use the same parameters needed for instantiating the rate E/I network and then convert them automatically.<br>
-
+# LIF Neurons
+We now turn to a E/I networks implementing its dynamic behavior with leaky integrate-and-fire neurons. <br>
+For this, we harness the concepts of Hierarchical Lava Processes and SubProcessModels. These allow us to avoid implementing everything ourselves, but rather to use already defined Processes and their ProcessModels to build more complicated programs. <br>
+We here use the behavior defined for the [LIF](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") and [Dense](https://github.com/lava-nc/lava/tree/main/src/lava/proc/dense "Lava's Dense Connectivity") Processes, we define the behavior of the E/I Network Process. <br>
+Moreover, we would like to place the LIF E/I network in a similar dynamical regime as the rate network. This is a difficult task since the underlying single neurons dynamics are quite different. We here provide an approximate conversion function that allows for a parameter mapping and especially qualitatively retains properties of the auto-covariance function. <br>
+With the implementation below, we may either pass LIF specific parameters directly  **or** use the same parameters needed for instantiating the rate E/I network and then convert them automatically.<br>
+""")
 # In[ ]:
 
 
@@ -557,10 +554,9 @@ class SubEINetworkModel(AbstractSubProcessModel):
         proc.vars.state_alt.alias(self.lif.vars.u)
 
 
-# #### Execution and Results
-# In order to execute the LIF E/I network and the infrastructure to monitor the activity, we introduce a ```CustomRunConfig``` where we specify which ProcessModel we select for execution.
+st.markdown("""Execution and Results
+In order to execute the LIF E/I network and the infrastructure to monitor the activity, we introduce a ```CustomRunConfig``` where we specify which ProcessModel we select for execution.""")
 
-# In[ ]:
 
 
 from lava.magma.core.run_conditions import RunSteps
@@ -612,11 +608,10 @@ data_u_balanced = monitor_u.get_data()[lif_network_balanced.name][lif_network_ba
 lif_network_balanced.stop()
 
 
-# #### Visualizing the activity
-# First, we visually inspect to spiking activity of the neurons in the network.<br>
-# To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
-
-# In[ ]:
+st.markdown("""Visualizing the activity
+First, we visually inspect to spiking activity of the neurons in the network.<br>
+To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
+""")
 
 
 def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
@@ -716,14 +711,15 @@ plt.ylabel('Covariance')
 plt.plot(lags, ac_fct)
 st.pyplot(fig)
 
-# Examining the auto-covariance function, we first note that again the overall values are small. Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.<br>
-# This means that the network has no memory of its previous states: Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. <br>
-# Such a network is unfit to perform meaningful computation.
+st.markdown("""
+Examining the auto-covariance function, we first note that again the overall values are small. Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.<br>
+This means that the network has no memory of its previous states: Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. <br>
+Such a network is unfit to perform meaningful computation.
 
-# #### Controlling the network
-# Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.<br>
-# Dynamically, this increase again should result in a fundamentally different network state.
-
+#### Controlling the network
+Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.<br>
+Dynamically, this increase again should result in a fundamentally different network state.
+""")
 # In[ ]:
 
 
