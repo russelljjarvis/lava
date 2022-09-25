@@ -71,8 +71,8 @@ network_params_balanced['g_factor'] = g_factor
 network_params_balanced['q_factor'] = q_factor
 
 
-st.markdown("""Hi there MoNE students, the source code 
-to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76)
+st.markdown(""" # Greetings MoNE students! 
+the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76)
 Notice that the code for the application is pure python, notice too, that you can write in markdown
 """)
 
