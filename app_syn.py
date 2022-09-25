@@ -1,7 +1,6 @@
 import lava
 import streamlit as st
 
-st.title("Build apparently works!")
 
 from lava.proc.learning_rules.stdp_learning_rule import STDPLoihi
 
@@ -12,7 +11,6 @@ from lava.proc.io.source import RingBuffer
 from lava.proc.dense.process import LearningDense as Dense
 from lava.proc.monitor.process import Monitor
 
-st.sidebar.markdown("Build apparently works?")
 
 # Set this tag to "fixed_pt" or "floating_pt" to choose the corresponding models.
 SELECT_TAG = "floating_pt"
