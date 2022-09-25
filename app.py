@@ -11,11 +11,18 @@ from lava.magma.core.model.model import AbstractProcessModel
 from scipy.special import erf
 
 import streamlit as st
+import numpy as np
+from matplotlib import pyplot as plt
+
+from lava.magma.core.run_conditions import RunSteps
+from lava.magma.core.run_configs import Loihi1SimCfg
+# Import monitoring Process.
+from lava.proc.monitor.process import Monitor
+
+# Configurations for execution.
+num_steps = 1000
 
 st.title("built...")
-import numpy as np
-# Fix the randomness.
-np.random.seed(1234)
 
 # Define dimensionality of the network.
 dim = 400/8
@@ -51,8 +58,7 @@ network_params_balanced['g_factor'] = g_factor
 network_params_balanced['q_factor'] = q_factor
 
 
-import numpy as np
-from matplotlib import pyplot as plt
+#np.random.seed(1234)
 
 
 st.markdown(""" E/I Network Lava Process
@@ -302,14 +308,6 @@ network_params_balanced['weights'] = generate_gaussian_weights(dim,
 
 # In[ ]:
 
-
-from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
-# Import monitoring Process.
-from lava.proc.monitor.process import Monitor
-
-# Configurations for execution.
-num_steps = 1000
 rcfg = Loihi1SimCfg(select_tag='rate_neurons')
 run_cond = RunSteps(num_steps=num_steps)
 
