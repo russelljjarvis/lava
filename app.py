@@ -25,7 +25,7 @@ num_steps = 1000
 st.title("built...")
 
 # Define dimensionality of the network.
-dim = Int(100)
+dim = 110
 shape = (dim,)
 
 # We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
