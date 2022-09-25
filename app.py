@@ -35,7 +35,10 @@ num_steps = 1000
 
 
 # Define dimensionality of the network.
-dim = 110
+label = "select network size"
+options = [100,150,200,250]
+dim = st.selectbox(label, options)
+
 shape = (dim,)
 
 # We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
