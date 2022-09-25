@@ -3,7 +3,15 @@
 from lava.magma.core.process.process import AbstractProcess
 from lava.magma.core.process.variable import Var
 from lava.magma.core.process.ports.ports import InPort, OutPort
+from lava.magma.core.model.py.type import LavaPyType
+from lava.magma.core.model.py.ports import PyInPort, PyOutPort
+from lava.magma.core.resources import CPU
+from lava.magma.core.model.model import AbstractProcessModel
+
+from scipy.special import erf
+
 import streamlit as st
+
 st.title("built...")
 import numpy as np
 # Fix the randomness.
@@ -47,17 +55,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-# #### E/I Network Lava Process
-# We define the structure of the E/I Network Lava Process class. <br>
-
-# In[2]:
-
+st.markdown(""" E/I Network Lava Process
+ We define the structure of the E/I Network Lava Process class. <br>
+""")
 
 st.sidebar.markdown("Inports worked...")
 
 st.markdown("""
 
-# Excitatory-Inhibitory Neural Network with Lava
+Excitatory-Inhibitory Neural Network with Lava
 
 **Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). <br>
 E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. <br>
@@ -67,7 +73,7 @@ This tutorial gives a high level view of
 - how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
 - how to use tags to chose between different ProcessModels when running the Process
 - the principle adjustments needed to run bit-accurate ProcessModels
-# #### E/I Network
+ E/I Network
 From bird's-eye view, an E/I network is a recurrently coupled network of neurons.<br>
 Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
 We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. <br>
@@ -77,10 +83,6 @@ By providing a utility function that maps the weights from rate to LIF networks,
 Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels.<br>
 General imports
 """)
-
-
-
-# In[3]:
 
 
 class EINetwork(AbstractProcess):
@@ -131,30 +133,20 @@ from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 from lava.magma.core.decorator import implements, tag, requires
 
 st.markdown("""
-# ### Rate neurons
-# We next turn to the different implementations of the E/I Network.
-# We start with a rate network obeying the equation
-# \begin{equation}
-#     \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}.
-# \end{equation}
-# The rate or state $r$ is a vector containing the excitatory and inhibitory populations. <br>
-# The non-linearity $\phi$ is chosen to be the error function. <br> 
-# The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
-#  and an external bias ($I_{\mathrm{bias}})$. <br>
-#  We discretize the equation as follows:
-#  \begin{equation}
-#     r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr
-# \end{equation}
-# Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+Rate neurons
+ We next turn to the different implementations of the E/I Network.
+ We start with a rate network obeying the equation
+ $ \begin{equation} \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}} \end{equation} $
+ The rate or state $r$ is a vector containing the excitatory and inhibitory populations. <br>
+ The non-linearity $\phi$ is chosen to be the error function. <br> 
+ The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
+  and an external bias ($I_{\mathrm{bias}})$. <br>
+  We discretize the equation as follows:
+  $ \begin{equation}     r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr \end{equation} $
+  Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
 """)
 
 
-from lava.magma.core.model.py.type import LavaPyType
-from lava.magma.core.model.py.ports import PyInPort, PyOutPort
-from lava.magma.core.resources import CPU
-from lava.magma.core.model.model import AbstractProcessModel
-
-from scipy.special import erf
 
 @implements(proc=EINetwork, protocol=LoihiProtocol)
 @tag('rate_neurons') # Tag allows for easy selection of ProcessModel in case multiple are defined.
@@ -278,8 +270,7 @@ def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     '''
     # Set scaled standard deviation of recurrent weights, J = q_factor**2 * 6 / full_shape.
     J = (2 * q_factor)**2 / dim
-    weights = np.random.normal(0, J,
-                                   (dim, dim))
+    weights = np.random.normal(0, J,(dim, dim))
         
     # Impose constraint that neurons can **either** be excitatory (positive weight)
     # **or** inhibitory (negative weight).
