@@ -71,8 +71,10 @@ network_params_balanced['g_factor'] = g_factor
 network_params_balanced['q_factor'] = q_factor
 
 
-#np.random.seed(1234)
-
+st.markdown("""Hi there MoNE students, the source code 
+to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76)
+Notice that the code for the application is pure python, notice too, that you can write in markdown
+""")
 
 st.markdown(""" E/I Network Lava Process
  We define the structure of the E/I Network Lava Process class. <br>
