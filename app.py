@@ -468,7 +468,7 @@ st.pyplot(fig)#plt.show()
 
 from lava.proc.dense.process import Dense
 from lava.proc.lif.process import LIF
-from convert_params import convert_rate_to_lif_params
+#from convert_params import convert_rate_to_lif_params
 
 @implements(proc=EINetwork, protocol=LoihiProtocol)
 @tag('lif_neurons')
