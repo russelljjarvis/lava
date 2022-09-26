@@ -451,7 +451,7 @@ if intro==str("Yes"):
     """)
 
 #@st.cache(ttl=24*3600)
-@st.cache(suppress_st_warning=True)
+#@st.cache(suppress_st_warning=True)
 
 def second_model_to_cache():
     # Defining new, larger q_factor.
@@ -739,7 +739,9 @@ _=plot3(spks_balanced)
     
 st.markdown(type(spks_balanced))
 st.markdown(spks_balanced)
-spike_frame = [{(ind,spikes) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
+spike_dict_empty = {(ind,[]) for (ind,nparray) in enumerate(spks_balanced)}
+spike_frame = [{(ind,spike_dict_empty[ind].append(spikes)) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
+
 st.dataframe(spike_frame)
 
 def the_rest_of_the_app():
