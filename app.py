@@ -1296,7 +1296,7 @@ def the_rest_of_the_app():
      To receive regular updates on the latest developments and releases of the Lava Software Framework please subscribe to the [INRC newsletter](http://eepurl.com/hJCyhb "INRC Newsletter").
     """)
     
-label="should we continue with the rest of the memory hungry app?")
+label="should we continue with the rest of the memory hungry app?"
 options = ["No","Yes"]
 decision = st.radio(label, options)    
 if decision == "Yes"
