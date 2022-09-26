@@ -73,7 +73,15 @@ network_params_balanced['q_factor'] = q_factor
 
 st.markdown(""" # Greetings MoNE students! 
 the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76)
-Notice that the code for the application is pure python, notice too, that you can write in markdown
+Notice that the code for the application is pure python, notice too, that you can write in markdown.
+
+## Background: Lava is notoriously hard to build from github source code on a personal machine. 
+However, the newest source code for Lava builds trivially as a streamlit web-app. To complete tomorrows tutorial and the 30% written document, I am hoping that you can all apply to join streamlit share using your github login. Signing up to streamlit share is just a few mouse clicks, to join via github. Unfortunately there is a three day wait, before you can access your own deployed web-apps. In the meantime I think I can figure out a work around.
+[Cloud • Streamlit](https://streamlit.io/cloud)
+This is app is an example of appified lava built from Python/pyproject.toml source code only:
+[Cloud • Streamlit](streamlitapp.com)
+I have invited some of you as collaborators to this app, so that tomorrow we can all modify the app and the source code via one central location [(my GitHub code)](https://github.com/russelljjarvis/lava).
+
 """)
 
 st.markdown(""" E/I Network Lava Process
