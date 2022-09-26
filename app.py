@@ -457,12 +457,10 @@ fig = plt.figure(figsize=(7,5))
 plt.xlabel('Lag')
 plt.ylabel('Correlation')
 plt.plot(lags, ac_fct_critical)
-st.pyplot(fig)#plt.show()
-
-#plt.show()
+st.pyplot(fig)
 
 
-st.markdown("""We moreover see that for positive time lags the auto-covariance function still is large. <br>
+st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
 This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
 Such a network can perform meaningful computations.
 
@@ -621,7 +619,24 @@ First, we visually inspect to spiking activity of the neurons in the network.<br
 To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
 """)
 
+def compute_ISI(spks):
+    # hint spks is a 2D matrix, get a 1D Vector per neuron-id spike train.
+    # [x for ind,x in enumerate(spks)]
+    pass
+    # return an array of ISI_arrays.
 
+def compute_ISI_CV(ISI_array):
+    # hint
+    # [x for ind,x in enumerate(spks)]
+    pass
+    # return a vector of scalars: ISI_CV
+
+def average(ISI_CV):
+    # use numpy to mean the vector of ISI_CVs
+    # return a scalar.
+
+    
+    
 def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     """Generate raster plot of spiking activity.
     
@@ -720,15 +735,16 @@ plt.plot(lags, ac_fct)
 st.pyplot(fig)
 
 st.markdown("""
-Examining the auto-covariance function, we first note that again the overall values are small. Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.<br>
-This means that the network has no memory of its previous states: Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. <br>
+Examining the auto-covariance function, we first note that again the overall values are small. 
+Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.
+This means that the network has no memory of its previous states: 
+Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. 
 Such a network is unfit to perform meaningful computation.
 
 #### Controlling the network
-Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.<br>
+Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.
 Dynamically, this increase again should result in a fundamentally different network state.
 """)
-# In[ ]:
 
 
 num_steps = 1000
@@ -749,7 +765,7 @@ monitor_u.probe(target=lif_network_critical.state_alt,  num_steps=num_steps)
 
 lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
 
-# Fetching spiking activity.
+st.markkdown("Fetching spiking activity.")
 spks_critical = outport_plug.data.get()
 data_v_critical = monitor_v.get_data()[lif_network_critical.name][lif_network_critical.state.name]
 data_u_critical = monitor_u.get_data()[lif_network_critical.name][lif_network_critical.state_alt.name]
