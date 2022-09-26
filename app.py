@@ -736,13 +736,15 @@ def plot3(spks_balanced)->None:
 
 _=plot3(spks_balanced)
     
-def spikes_2_frame(spks_balanced):    
+def spikes_2_frame(spks_balanced)->None:    
     st.markdown(type(spks_balanced))
     st.markdown(spks_balanced)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks_balanced)}
-    spike_frame = [{ind:spikes for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
+    spike_frame = [{ind:nparray for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
 
     st.dataframe(spike_frame)
+    #st.markdown(spike_frame.values)
+    
 spikes_2_frame(spks_balanced)
 def the_rest_of_the_app():
     
