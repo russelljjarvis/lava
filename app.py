@@ -792,7 +792,7 @@ def the_rest_of_the_app():
 
 
     @st.cache
-    def plot5(spks_critical):->None
+    def plot5(spks_critical)->None:
         fig = raster_plot(spks=spks_critical)
         st.pyplot(fig)
         return None
