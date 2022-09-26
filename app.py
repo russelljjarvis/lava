@@ -428,17 +428,17 @@ def plot0(lags, ac_fct_balanced)->None:
     plt.plot(lags, ac_fct_balanced)
     st.pyplot(fig)
 plot0(lags, ac_fct_balanced)
+if intro==str("Yes"):
+    st.markdown("""
+    As expected, there is covariance has its maximum at a time lag of $0$. <br>
+    Examining the covariance function, we first note its values are small ($<<1$) implying low dimensional dynamics of the network. <br>
+    This fits our observation made above on the grounds of the display of the time-resolved activity. <br>
 
-st.markdown("""
-As expected, there is covariance has its maximum at a time lag of $0$. <br>
-Examining the covariance function, we first note its values are small ($<<1$) implying low dimensional dynamics of the network. <br>
-This fits our observation made above on the grounds of the display of the time-resolved activity. <br>
-
-# Controlling the network
- We saw that the states of the neurons quickly converged to a globally stable fixed point.<br>
- The reason for this fixed point is, that the dampening part dominates the dynamical behavior - we need to increase the weights! <br>
- This we can achieve by increasing the `q_factor`.
-""")
+    # Controlling the network
+     We saw that the states of the neurons quickly converged to a globally stable fixed point.<br>
+     The reason for this fixed point is, that the dampening part dominates the dynamical behavior - we need to increase the weights! <br>
+     This we can achieve by increasing the `q_factor`.
+    """)
 
 
 # Defining new, larger q_factor.
@@ -477,11 +477,13 @@ def plot1(states_critical)->None:
     plt.plot(states_critical[:, :50])
     st.pyplot(fig)
 plot1(states_critical)
+if intro==str("Yes"):
 
-st.markdown("""
-We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
- The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
-""")
+
+    st.markdown("""
+    We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
+     The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
+    """)
 
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
@@ -495,18 +497,19 @@ def plot2(lags, ac_fct_critical)->None:
     plt.plot(lags, ac_fct_critical)
     st.pyplot(fig)
 plot2(lags, ac_fct_critical)
+if intro==str("Yes"):
 
-st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
-This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
-Such a network can perform meaningful computations.
+    st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
+    This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
+    Such a network can perform meaningful computations.
 
-# LIF Neurons
-We now turn to a E/I networks implementing its dynamic behavior with leaky integrate-and-fire neurons. <br>
-For this, we harness the concepts of Hierarchical Lava Processes and SubProcessModels. These allow us to avoid implementing everything ourselves, but rather to use already defined Processes and their ProcessModels to build more complicated programs. <br>
-We here use the behavior defined for the [LIF](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") and [Dense](https://github.com/lava-nc/lava/tree/main/src/lava/proc/dense "Lava's Dense Connectivity") Processes, we define the behavior of the E/I Network Process. <br>
-Moreover, we would like to place the LIF E/I network in a similar dynamical regime as the rate network. This is a difficult task since the underlying single neurons dynamics are quite different. We here provide an approximate conversion function that allows for a parameter mapping and especially qualitatively retains properties of the auto-covariance function. <br>
-With the implementation below, we may either pass LIF specific parameters directly  **or** use the same parameters needed for instantiating the rate E/I network and then convert them automatically.<br>
-""")
+    # LIF Neurons
+    We now turn to a E/I networks implementing its dynamic behavior with leaky integrate-and-fire neurons. <br>
+    For this, we harness the concepts of Hierarchical Lava Processes and SubProcessModels. These allow us to avoid implementing everything ourselves, but rather to use already defined Processes and their ProcessModels to build more complicated programs. <br>
+    We here use the behavior defined for the [LIF](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") and [Dense](https://github.com/lava-nc/lava/tree/main/src/lava/proc/dense "Lava's Dense Connectivity") Processes, we define the behavior of the E/I Network Process. <br>
+    Moreover, we would like to place the LIF E/I network in a similar dynamical regime as the rate network. This is a difficult task since the underlying single neurons dynamics are quite different. We here provide an approximate conversion function that allows for a parameter mapping and especially qualitatively retains properties of the auto-covariance function. <br>
+    With the implementation below, we may either pass LIF specific parameters directly  **or** use the same parameters needed for instantiating the rate E/I network and then convert them automatically.<br>
+    """)
 
 
 
