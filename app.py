@@ -326,7 +326,8 @@ def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
             
     return weights
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
+@st.cache(suppress_st_warning=True)
 def first_model_to_cache():
     # Generate weights and store them in parameter dictionary.
     network_params_balanced['weights'] = generate_gaussian_weights(dim,
@@ -449,7 +450,9 @@ if intro==str("Yes"):
      This we can achieve by increasing the `q_factor`.
     """)
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
+@st.cache(suppress_st_warning=True)
+
 def second_model_to_cache():
     # Defining new, larger q_factor.
     q_factor = np.sqrt(dim / 6)
@@ -634,7 +637,9 @@ class CustomRunConfigFloat(Loihi1SimCfg):
             return PyDenseModelFloat
         else:
             return super().select(proc, proc_models)
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
+@st.cache(suppress_st_warning=True)
+
 def third_model_to_cache():
     rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
 
