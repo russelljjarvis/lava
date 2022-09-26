@@ -327,7 +327,7 @@ def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     return weights
 
 #@st.cache(ttl=24*3600)
-@st.cache(suppress_st_warning=True)
+#@st.cache(suppress_st_warning=True)
 def first_model_to_cache():
     # Generate weights and store them in parameter dictionary.
     network_params_balanced['weights'] = generate_gaussian_weights(dim,
