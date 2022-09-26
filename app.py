@@ -645,9 +645,9 @@ def model_to_cache():
     data_u_balanced = monitor_u.get_data()[lif_network_balanced.name][lif_network_balanced.state_alt.name]
 
     lif_network_balanced.stop()
-    return data_v_balanced,data_u_balanced,spks_balanced
+    return (data_v_balanced,data_u_balanced,spks_balanced)
 
-data_v_balanced,data_v_balanced,data_u_balanced=model_to_cache()
+(data_v_balanced,data_v_balanced,spks_balanced)=model_to_cache()
 
 st.markdown("""Visualizing the activity
 First, we visually inspect to spiking activity of the neurons in the network.<br>
