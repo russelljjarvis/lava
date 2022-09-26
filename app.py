@@ -994,12 +994,12 @@ def the_rest_of_the_app():
 
 
     st.markdown("""
-    We see that the temporal evolution of the total activation in the low weights case is much narrower than in the high weights network. <br>
-     Moreover, we see that in the high weights network, the fluctuations of the activations evolve on a very long time scale as compared to the other network. <br>
+    We see that the temporal evolution of the total activation in the low weights case is much narrower than in the high weights network. 
+     Moreover, we see that in the high weights network, the fluctuations of the activations evolve on a very long time scale as compared to the other network. 
      This implies that a neuron can sustain it's active, bursting state over longer periods of time leading to memory in the network as well as activity at the edge of chaos.<br>
 
      ### Running a ProcessModel bit-accurate with Loihi
-     So far, we have used neuron models and weights that are internally represented as floating point numbers. <br>
+     So far, we have used neuron models and weights that are internally represented as floating point numbers. 
      Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
      First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
     """)
@@ -1062,7 +1062,7 @@ def the_rest_of_the_app():
 
         return scaling_funct
 
-    @st.cache
+    #@st.cache
     def float2fixed_lif_parameter(lif_params):
         '''Float- to fixed-point mapping for LIF parameters.
 
@@ -1299,5 +1299,5 @@ def the_rest_of_the_app():
 label="should we continue with the rest of the memory hungry app?"
 options = ["No","Yes"]
 decision = st.radio(label, options)    
-if decision == "Yes"
+if decision == "Yes":
     the_rest_of_the_app()
