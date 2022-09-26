@@ -48,7 +48,7 @@ dim = st.selectbox(label, options)
 
 shape = (dim,)
 
-# We represent the dimensionality by 400 neurons. As stated above 80% of the neurons will be excitatory.
+st.markdown(""" We represent the dimensionality by {0} neurons. As stated above 80% of the neurons will be excitatory.""".format(dim))
 num_neurons_exc = int(dim * 0.8)
 num_neurons_inh = dim - num_neurons_exc
 
@@ -78,9 +78,9 @@ network_params_balanced['g_factor'] = g_factor
 network_params_balanced['q_factor'] = q_factor
 
 
-st.markdown(""" # Greetings MoNE students! 
-the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76)
-Notice that the code for the application is pure python, notice too, that you can write in markdown.
+st.markdown(""" # Greetings MoNE students! \n
+the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76) \n
+Notice that the code for the application is pure python, notice too, that you can write in markdown. \n
 
 ## Background: Lava is notoriously hard to build from github source code on a personal machine. 
 However, the newest source code for Lava builds trivially as a streamlit web-app. To complete tomorrows tutorial and the 30% written document, I am hoping that you can all apply to join streamlit share using your github login. Signing up to streamlit share is just a few mouse clicks, to join via github. Unfortunately there is a three day wait, before you can access your own deployed web-apps. In the meantime I think I can figure out a work around.
@@ -104,13 +104,15 @@ This tutorial gives a high level view of
 - how to use tags to chose between different ProcessModels when running the Process
 - the principle adjustments needed to run bit-accurate ProcessModels
  E/I Network
-From bird's-eye view, an E/I network is a recurrently coupled network of neurons.<br>
-Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
-We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. <br>
-Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the response properties of the network. <br>
-In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. <br>
-By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks.
-Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels.<br>
+From bird's-eye view, an E/I network is a recurrently coupled network of neurons. \n 
+Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, \n
+appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
+We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. \n
+Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the \n
+response properties of the network. \n
+In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. \n
+By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks. \n
+Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels. \n
 General imports
 """)
 
@@ -151,18 +153,21 @@ class EINetwork(AbstractProcess):
 
 
 st.markdown("""
-Rate neurons
- We next turn to the different implementations of the E/I Network.
- We start with a rate network obeying the equation
- $ \begin{equation} \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}} \end{equation} $
- The rate or state $r$ is a vector containing the excitatory and inhibitory populations. <br>
- The non-linearity $\phi$ is chosen to be the error function. <br> 
+Rate neurons We next turn to the different implementations of the E/I Network.
+ We start with a rate network obeying the equation""")
+ 
+    
+ st.latex(\begin{equation} \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}} \end{equation})
+ st.markdown("""
+ The rate or state $r$ is a vector containing the excitatory and inhibitory populations. \n
+ The non-linearity $\phi$ is chosen to be the error function. 
  The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
-  and an external bias ($I_{\mathrm{bias}})$. <br>
-  We discretize the equation as follows:
-  $ \begin{equation}     r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr \end{equation} $
-  Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
-""")
+  and an external bias ($I_{\mathrm{bias}})$. \n
+  We discretize the equation as follows:""")
+  st.latex(\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation})
+  st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these \n 
+              subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+  """)
 
 
 
@@ -179,7 +184,7 @@ class RateEINetworkModel(PyLoihiProcessModel):
     bias_inh : np.ndarray = LavaPyType(np.ndarray, float)
     weights : np.ndarray = LavaPyType(np.ndarray, float)
 
-    @st.cache
+    #@st.cache
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
         
@@ -228,7 +233,7 @@ class RateEINetworkModel(PyLoihiProcessModel):
         state_new += self.weights @ erf(state) # Add the recurrent input.
         return state_new
     
-    @st.cache
+    #@st.cache
     def run_spk(self):
         """The run function that performs the actual computation during
         execution orchestrated by a PyLoihiProcessModel using the
