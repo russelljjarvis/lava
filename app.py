@@ -401,7 +401,8 @@ def auto_cov_fct(acts, max_lag=100, offset=200):
 
 lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
+#@st.cache(suppress_st_warning=False, hash_funcs=True)
 def plot0(lags, ac_fct_balanced)->None:
     # Plotting the auto-correlation function.
     fig = plt.figure(figsize=(7,5))
@@ -451,7 +452,7 @@ network_critical.run(run_cfg=rcfg, condition=run_cond)
 states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
 network_critical.stop()
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
 def plot1(states_critical)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
@@ -468,7 +469,7 @@ We find that after increasing the `q_factor`, the network shows a very different
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
 def plot2(lags, ac_fct_critical)->None:
     # Plotting the auto-correlation function.
     fig = plt.figure(figsize=(7,5))
@@ -691,7 +692,7 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     return fig       
 
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
 def plot3(spks_balanced)->None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
@@ -791,7 +792,7 @@ def the_rest_of_the_app():
     lif_network_critical.stop()
 
 
-    @st.cache
+    #@st.cache
     def plot5(spks_critical)->None:
         fig = raster_plot(spks=spks_critical)
         st.pyplot(fig)
@@ -1003,7 +1004,7 @@ def the_rest_of_the_app():
      Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
      First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
     """)
-    @st.cache(ttl=24*3600)
+    #@st.cache(ttl=24*3600)
     def _scaling_funct(params):
         '''Find optimal scaling function for float- to fixed-point mapping.
 
@@ -1106,7 +1107,7 @@ def the_rest_of_the_app():
 
         return lif_params_fixed
 
-    @st.cache(ttl=24*3600)
+    #@st.cache(ttl=24*3600)
     def scaling_funct_dudv(val):
         '''Scaling function for du, dv in LIF
         ''' 
@@ -1267,7 +1268,7 @@ def the_rest_of_the_app():
     ax2.set_xlabel('Time Step')
     st.pyplot(f)
 
-    @st.cache
+    # @st.cache
     def covplot(lags,ac_fct_lif_critical_fixed,ac_fct_lif_critical)->None:
         # Plotting the auto-correlation function.
         fig = plt.figure(figsize=(7,5))
