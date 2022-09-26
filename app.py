@@ -39,13 +39,19 @@ from lava.proc.lif.models import PyLifModelBitAcc
 
 # Configurations for execution.
 num_steps = 1000
+dim = 100
 
 
 # Define dimensionality of the network.
 label = "select network size"
 #options = [100,150,200,250]
-dim = 100
 #dim = st.selectbox(label, options)
+
+label = "select run time of the network"
+#options = [500,250,1250,2500]
+#dim = 100
+#runtime = st.selectbox(label, options)
+
 
 label = "Display Introduction ?"
 options = ["No","Yes"]
@@ -320,31 +326,34 @@ def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
             
     return weights
 
-# Generate weights and store them in parameter dictionary.
-network_params_balanced['weights'] = generate_gaussian_weights(dim,
-                                                               num_neurons_exc,
-                                                               network_params_balanced['q_factor'],
-                                                               network_params_balanced['g_factor'])
+@st.cache(ttl=24*3600)
+def first_model_to_cache():
+    # Generate weights and store them in parameter dictionary.
+    network_params_balanced['weights'] = generate_gaussian_weights(dim,
+                                                                   num_neurons_exc,
+                                                                   network_params_balanced['q_factor'],
+                                                                   network_params_balanced['g_factor'])
 
 
-st.markdown("Execution and Results")
+    st.markdown("Execution and Results")
 
 
-rcfg = Loihi1SimCfg(select_tag='rate_neurons')
-run_cond = RunSteps(num_steps=num_steps)
+    rcfg = Loihi1SimCfg(select_tag='rate_neurons')
+    run_cond = RunSteps(num_steps=num_steps)
 
-# Instantiating network and IO processes.
-network_balanced = EINetwork(**network_params_balanced)
-state_monitor = Monitor()
+    # Instantiating network and IO processes.
+    network_balanced = EINetwork(**network_params_balanced)
+    state_monitor = Monitor()
 
-state_monitor.probe(target=network_balanced.state,  num_steps=num_steps)
+    state_monitor.probe(target=network_balanced.state,  num_steps=num_steps)
 
-# Run the network.
-network_balanced.run(run_cfg=rcfg, condition=run_cond)
-states_balanced = state_monitor.get_data()[network_balanced.name][network_balanced.state.name]
-network_balanced.stop()
+    # Run the network.
+    network_balanced.run(run_cfg=rcfg, condition=run_cond)
+    states_balanced = state_monitor.get_data()[network_balanced.name][network_balanced.state.name]
+    network_balanced.stop()
+    return states_balanced
 
-
+states_balanced = first_model_to_cache()
 st.markdown("""Visualizing the activity
 We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
 """)
@@ -440,35 +449,37 @@ if intro==str("Yes"):
      This we can achieve by increasing the `q_factor`.
     """)
 
+@st.cache(ttl=24*3600)
+def second_model_to_cache():
+    # Defining new, larger q_factor.
+    q_factor = np.sqrt(dim / 6)
 
-# Defining new, larger q_factor.
-q_factor = np.sqrt(dim / 6)
-
-# Changing the strenghts of the recurrent connections.
-network_params_critical = network_params_balanced.copy()
-network_params_critical['q_factor'] = q_factor
-network_params_critical['weights'] = generate_gaussian_weights(dim,
-                                                               num_neurons_exc,
-                                                               network_params_critical['q_factor'],
-                                                               network_params_critical['g_factor'])
+    # Changing the strenghts of the recurrent connections.
+    network_params_critical = network_params_balanced.copy()
+    network_params_critical['q_factor'] = q_factor
+    network_params_critical['weights'] = generate_gaussian_weights(dim,
+                                                                   num_neurons_exc,
+                                                                   network_params_critical['q_factor'],
+                                                                   network_params_critical['g_factor'])
 
 
-# Configurations for execution.
-num_steps = 1000
-rcfg = Loihi1SimCfg(select_tag='rate_neurons')
-run_cond = RunSteps(num_steps=num_steps)
+    # Configurations for execution.
+    num_steps = 1000
+    rcfg = Loihi1SimCfg(select_tag='rate_neurons')
+    run_cond = RunSteps(num_steps=num_steps)
 
-# Instantiating network and IO processes.
-network_critical = EINetwork(**network_params_critical)
-state_monitor = Monitor()
+    # Instantiating network and IO processes.
+    network_critical = EINetwork(**network_params_critical)
+    state_monitor = Monitor()
 
-state_monitor.probe(target=network_critical.state,  num_steps=num_steps)
+    state_monitor.probe(target=network_critical.state,  num_steps=num_steps)
 
-# Run the network.
-network_critical.run(run_cfg=rcfg, condition=run_cond)
-states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
-network_critical.stop()
-
+    # Run the network.
+    network_critical.run(run_cfg=rcfg, condition=run_cond)
+    states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
+    network_critical.stop()
+    return states_critical
+states_critical = second_model_to_cache()
 #@st.cache(ttl=24*3600)
 def plot1(states_critical)->None:
     fig = plt.figure(figsize=(7,5))
@@ -624,7 +635,7 @@ class CustomRunConfigFloat(Loihi1SimCfg):
         else:
             return super().select(proc, proc_models)
 @st.cache(ttl=24*3600)
-def model_to_cache():
+def third_model_to_cache():
     rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
 
     # Instantiating network and IO processes.
@@ -649,7 +660,7 @@ def model_to_cache():
     lif_network_balanced.stop()
     return (data_v_balanced,data_u_balanced,spks_balanced)
 
-(data_v_balanced,data_v_balanced,spks_balanced)=model_to_cache()
+(data_v_balanced,data_v_balanced,spks_balanced)=third_model_to_cache()
 
 st.markdown("""Visualizing the activity
 First, we visually inspect to spiking activity of the neurons in the network.<br>
