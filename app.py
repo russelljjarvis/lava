@@ -711,7 +711,7 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     return fig       
 
 
-#@st.cache(ttl=24*3600)
+#@st.(ttl=24*3600)
 def plot3(spks_balanced)->None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
