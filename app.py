@@ -739,7 +739,7 @@ _=plot3(spks_balanced)
     
 st.markdown(type(spks_balanced))
 st.markdown(spks_balanced)
-spike_frame = [{(k,v) for k,v in spks_balanced}]
+spike_frame = [{(k,v) for k in spks_balanced for v in k}]
 st.dataframe(spike_frame)
 
 def the_rest_of_the_app():
