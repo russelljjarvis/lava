@@ -104,7 +104,7 @@ This tutorial gives a high level view of
  E/I Network
 From bird's-eye view, an E/I network is a recurrently coupled network of neurons. \n 
 Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, \n
-appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.<br>
+appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.
 We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. \n
 Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the \n
 response properties of the network. \n
@@ -159,7 +159,7 @@ The non-linearity $\phi$ is chosen to be the error function.
 The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
 and an external bias ($I_{\mathrm{bias}})$. 
 We discretize the equation as follows:""")
-st.latex(r'''\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation}''')
+st.latex(r'''r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr''')
 
 st.markdown("""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
 """)
@@ -335,7 +335,7 @@ st.markdown("""Visualizing the activity
 We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
 """)
 
-@st.cache(ttl=24*3600)
+@st.cache(ttl=24*3600,hash_funcs={matplotlib.figure.Figure: lambda _: None})
 def cache_fig(states_balanced)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
