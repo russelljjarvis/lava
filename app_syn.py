@@ -109,9 +109,6 @@ plast_conn.a_out.connect(lif_post.a_in)
 # Connect back-propagating actionpotential (BAP)
 lif_post.s_out.connect(plast_conn.s_in_bap)
 
-
-st.sidebar.markdown("### Build apparently works?")
-
 # Create monitors
 mon_pre_trace = Monitor()
 mon_post_trace = Monitor()
@@ -143,7 +140,6 @@ weights = mon_weight.get_data()['plastic_dense']['weights'][:, :, 0]
 # Stopping
 pattern_pre.stop()
 
-st.sidebar.markdown("# results done..!")
 import matplotlib.pyplot as plt
 
 
@@ -174,15 +170,15 @@ plot_spikes(spikes=[np.where(post_spikes[:, 0])[0], np.where(pre_spikes[:, 0])[0
 # Plotting trace dynamics
     
 def plot_time_series(time, time_series, ylabel, title):
-    plt.figure(figsize=(10, 1))
+    fig = plt.figure(figsize=(10, 1))
     
     plt.step(time, time_series)
     
     plt.title(title)
     plt.xlabel("Time steps")
     plt.ylabel(ylabel)
-    
-    plt.show()
+    st.pyplot(fig)
+    #plt.show()
     
 # Plotting pre trace dynamics
 plot_time_series(time=time, time_series=pre_trace, ylabel="Trace value", title="Pre trace")
