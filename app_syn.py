@@ -1,3 +1,4 @@
+"""
 import lava
 import streamlit as st
 
@@ -147,7 +148,7 @@ import matplotlib.pyplot as plt
 def plot_spikes(spikes, legend, colors):
     offsets = list(range(1, len(spikes) + 1))
     
-    plt.figure(figsize=(10, 3))
+    fig = plt.figure(figsize=(10, 3))
     
     spikes_plot = plt.eventplot(positions=spikes, 
                                 lineoffsets=offsets,
@@ -159,7 +160,7 @@ def plot_spikes(spikes, legend, colors):
     plt.ylabel("Neurons")
     plt.yticks(ticks=offsets, labels=legend)
     
-    plt.show()
+    plt.pyplot(fig)
 
 # Plot spikes
 plot_spikes(spikes=[np.where(post_spikes[:, 0])[0], np.where(pre_spikes[:, 0])[0]], 
@@ -214,7 +215,7 @@ def extract_stdp_weight_changes(time, spikes_pre, spikes_post, wgt):
     
 def plot_stdp(time, spikes_pre, spikes_post, wgt, 
               on_pre_stdp, y1_impulse, y1_tau, 
-              on_post_stdp, x1_impulse, x1_tau):
+              on_post_stdp, x1_impulse, x1_tau,show=False):
     # Derive weight changes as a function of time differences
     diff_t, diff_w = extract_stdp_weight_changes(time, spikes_pre, spikes_post, wgt)
     
@@ -236,23 +237,25 @@ def plot_stdp(time, spikes_pre, spikes_post, wgt,
     x_pos = np.linspace(0, max_abs_dt, 1000)
     # Derive learning window (positive part)
     w_pos = a_pos * np.exp(- x_pos / x1_tau)
-    
-    fig = plt.figure(figsize=(10, 5))
-    
-    plt.scatter(diff_t, diff_w, label="Weight changes", color="b")
-    
-    plt.plot(x_neg, w_neg, label="W-", color="r")
-    plt.plot(x_pos, w_pos, label="W+", color="g")
-    
-    plt.title("STDP weight changes - Learning window")
-    plt.xlabel('t_post - t_pre')
-    plt.ylabel('Weight change')
-    plt.legend()
-    plt.grid()
-    st.pyplot(fig)
+    if show:
+        fig = plt.figure(figsize=(10, 5))
+
+        plt.scatter(diff_t, diff_w, label="Weight changes", color="b")
+
+        plt.plot(x_neg, w_neg, label="W-", color="r")
+        plt.plot(x_pos, w_pos, label="W+", color="g")
+
+        plt.title("STDP weight changes - Learning window")
+        plt.xlabel('t_post - t_pre')
+        plt.ylabel('Weight change')
+        plt.legend()
+        plt.grid()
+        st.pyplot(fig)
     #plt.show()
 
 # Plot STDP window
+
 plot_stdp(time, np.where(pre_spikes[:, 0]), np.where(post_spikes[:, 0]), weights[:, 0], 
           stdp.A_plus, stdp.y1_impulse, stdp.tau_plus, 
           stdp.A_minus, stdp.x1_impulse, stdp.tau_minus)
+"""
