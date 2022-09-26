@@ -161,7 +161,7 @@ and an external bias ($I_{\mathrm{bias}})$.
 We discretize the equation as follows:""")
 st.latex(r'''\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation}''')
 
-st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+st.markdown("""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
 """)
 
 
