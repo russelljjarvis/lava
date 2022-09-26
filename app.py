@@ -82,7 +82,6 @@ network_params_balanced['q_factor'] = q_factor
 st.markdown(""" # Greetings MoNE students! \n
 the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76) \n
 Notice that the code for the application is pure python, notice too, that you can write in markdown. \n
-
 ## Background: Lava is notoriously hard to build from github source code on a personal machine. 
 However, the newest source code for Lava builds trivially as a streamlit web-app. To complete tomorrows tutorial and the 30% written document, I am hoping that you can all apply to join streamlit share using your github login. Signing up to streamlit share is just a few mouse clicks, to join via github. Unfortunately there is a three day wait, before you can access your own deployed web-apps. In the meantime I think I can figure out a work around.
 [Cloud • Streamlit](https://streamlit.io/cloud)
@@ -93,12 +92,10 @@ I have invited some of you as collaborators to this app, so that tomorrow we can
 """)
 
 st.markdown(""" E/I Network Lava Process
- We define the structure of the E/I Network Lava Process class. <br>
+ We define the structure of the E/I Network Lava Process class.
 Excitatory-Inhibitory Neural Network with Lava
-
-**Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). <br>
-E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. <br>
-
+**Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). 
+E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. 
 This tutorial gives a high level view of
 - how to implement simple E/I Network Lava Process
 - how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
@@ -150,27 +147,21 @@ class EINetwork(AbstractProcess):
         self.outport = OutPort(shape=(full_shape,))
 
 
-st.markdown(""" ProcessModels for Python execution""")
-
-
-st.markdown("""
+st.markdown(""" ProcessModels for Python execution
 Rate neurons We next turn to the different implementations of the E/I Network.
- We start with a rate network obeying the equation.
+We start with a rate network obeying the equation.
 """)
  
-    
 st.latex(r'''$  \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}  $''')
 st.markdown("""
 The rate or state $r$ is a vector containing the excitatory and inhibitory populations.
 The non-linearity $\phi$ is chosen to be the error function. 
 The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
 and an external bias ($I_{\mathrm{bias}})$. 
-We discretize the equation as follows:
-""")
+We discretize the equation as follows:""")
 st.latex(r'''\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation}''')
 
-st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these 
-          subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
 """)
 
 
