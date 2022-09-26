@@ -739,8 +739,8 @@ _=plot3(spks_balanced)
     
 st.markdown(type(spks_balanced))
 st.markdown(spks_balanced)
-spike_dict_empty = {(ind,[]) for (ind,nparray) in enumerate(spks_balanced)}
-spike_frame = [{(ind,spike_dict_empty[ind].append(spikes)) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
+spike_dict_empty = {ind,[] for (ind,nparray) in enumerate(spks_balanced)}
+spike_frame = [{ind,spike_dict_empty[ind].append(spikes) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}]
 
 st.dataframe(spike_frame)
 
