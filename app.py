@@ -47,6 +47,11 @@ label = "select network size"
 dim = 100
 #dim = st.selectbox(label, options)
 
+label = "Display Introduction ?"
+options = ["No","Yes"]
+#dim = 100
+intro = st.selectbox(label, options)
+
 shape = (dim,)
 
 st.markdown(""" We represent the dimensionality by {0} neurons. As stated above 80% of the neurons will be excitatory.""".format(dim))
@@ -78,42 +83,44 @@ network_params_balanced.update(params_inh)
 network_params_balanced['g_factor'] = g_factor
 network_params_balanced['q_factor'] = q_factor
 
+def display_intro():
+    st.markdown(""" # Greetings MoNE students! \n
+    the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76) \n
+    Notice that the code for the application is pure python, notice too, that you can write in markdown. \n
+    ## Background: Lava is notoriously hard to build from github source code on a personal machine. 
+    However, the newest source code for Lava builds trivially as a streamlit web-app. To complete tomorrows tutorial and the 30% written document, I am hoping that you can all apply to join streamlit share using your github login. Signing up to streamlit share is just a few mouse clicks, to join via github. Unfortunately there is a three day wait, before you can access your own deployed web-apps. In the meantime I think I can figure out a work around.
+    [Cloud • Streamlit](https://streamlit.io/cloud)
+    This is app is an example of appified lava built from Python/pyproject.toml source code only:
+    [Cloud • Streamlit](streamlitapp.com)
+    I have invited some of you as collaborators to this app, so that tomorrow we can all modify the app and the source code via one central location [(my GitHub code)](https://github.com/russelljjarvis/lava).
 
-st.markdown(""" # Greetings MoNE students! \n
-the source code to modify this application lives [here](https://github.com/russelljjarvis/lava/blob/main/app.py#L74-L76) \n
-Notice that the code for the application is pure python, notice too, that you can write in markdown. \n
-## Background: Lava is notoriously hard to build from github source code on a personal machine. 
-However, the newest source code for Lava builds trivially as a streamlit web-app. To complete tomorrows tutorial and the 30% written document, I am hoping that you can all apply to join streamlit share using your github login. Signing up to streamlit share is just a few mouse clicks, to join via github. Unfortunately there is a three day wait, before you can access your own deployed web-apps. In the meantime I think I can figure out a work around.
-[Cloud • Streamlit](https://streamlit.io/cloud)
-This is app is an example of appified lava built from Python/pyproject.toml source code only:
-[Cloud • Streamlit](streamlitapp.com)
-I have invited some of you as collaborators to this app, so that tomorrow we can all modify the app and the source code via one central location [(my GitHub code)](https://github.com/russelljjarvis/lava).
+    """)
 
-""")
-
-st.markdown(""" E/I Network Lava Process
- We define the structure of the E/I Network Lava Process class.
-Excitatory-Inhibitory Neural Network with Lava
-**Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). 
-E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. 
-This tutorial gives a high level view of
-- how to implement simple E/I Network Lava Process
-- how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
-- how to use tags to chose between different ProcessModels when running the Process
-- the principle adjustments needed to run bit-accurate ProcessModels
- E/I Network
-From bird's-eye view, an E/I network is a recurrently coupled network of neurons. \n 
-Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, \n
-appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.
-We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. \n
-Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the \n
-response properties of the network. \n
-In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. \n
-By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks. \n
-Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels. \n
-General imports
-""")
-
+    st.markdown(""" E/I Network Lava Process
+     We define the structure of the E/I Network Lava Process class.
+    Excitatory-Inhibitory Neural Network with Lava
+    **Motivation**: In this tutorial, we will build a Lava Process for a neural networks of excitatory and inhibitory neurons (E/I network). 
+    E/I networks are a fundamental example of neural networks mimicking the structure of the brain and exhibiting rich dynamical behavior. 
+    This tutorial gives a high level view of
+    - how to implement simple E/I Network Lava Process
+    - how to define and select multiple ProcessModels for the E/I Network, based on Rate and [Leaky Integrate-and-Fire (LIF)](https://github.com/lava-nc/lava/tree/main/src/lava/proc/lif "Lava's LIF neuron") neurons
+    - how to use tags to chose between different ProcessModels when running the Process
+    - the principle adjustments needed to run bit-accurate ProcessModels
+     E/I Network
+    From bird's-eye view, an E/I network is a recurrently coupled network of neurons. \n 
+    Since positive couplings (excitatory synapses) alone lead to a positive feedback loop ultimately causing a divergence in the activity of the network, \n
+    appropriate negative couplings (inhibitory synapses) need to be introduced to counterbalance this effect.
+    We here require a separation of the neurons into two populations: Neurons can either be inhibitory or excitatory. \n
+    Such networks exhibit different dynamical states. By introducing a control parameter, we can switch between these states and simultaneously alter the \n
+    response properties of the network. \n
+    In the notebook below, we introduce two incarnations of E/I networks with different single neuron models: Rate and LIF neurons. \n
+    By providing a utility function that maps the weights from rate to LIF networks, we can retain hallmark properties of the dynamic in both networks. \n
+    Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels. \n
+    General imports
+    """)
+if intro:
+    display_intro()
+    
 
 class EINetwork(AbstractProcess):
     """Network of recurrently connected neurons.
@@ -146,24 +153,27 @@ class EINetwork(AbstractProcess):
         self.inport = InPort(shape=(full_shape,))
         self.outport = OutPort(shape=(full_shape,))
 
+def display_intro0():
+    st.markdown(""" ProcessModels for Python execution
+    Rate neurons We next turn to the different implementations of the E/I Network.
+    We start with a rate network obeying the equation.
+    """)
 
-st.markdown(""" ProcessModels for Python execution
-Rate neurons We next turn to the different implementations of the E/I Network.
-We start with a rate network obeying the equation.
-""")
- 
-st.latex(r'''\tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}''')
-st.markdown("""
-The rate or state $r$ is a vector containing the excitatory and inhibitory populations.
-The non-linearity $\phi$ is chosen to be the error function. 
-The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
-and an external bias ($I_{\mathrm{bias}})$. 
-We discretize the equation as follows:""")
-st.latex(r'''r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr''')
+    st.latex(r'''\tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}''')
+    st.markdown("""
+    The rate or state $r$ is a vector containing the excitatory and inhibitory populations.
+    The non-linearity $\phi$ is chosen to be the error function. 
+    The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
+    and an external bias ($I_{\mathrm{bias}})$. 
+    We discretize the equation as follows:""")
+    st.latex(r'''r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr''')
 
-st.markdown("""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
-""")
+    st.markdown("""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+    """)
 
+if intro:
+    display_intro0()
+    
 
 
 @implements(proc=EINetwork, protocol=LoihiProtocol)
@@ -248,16 +258,20 @@ class RateEINetworkModel(PyLoihiProcessModel):
         self.state = self.state_update(self.state) + a_in
         self.outport.send(self.state)
         
+def display_intro1():
+    st.markdown("""Defining the parameters for the network
+     Next, we need to constrain the network with the needed parameters. <br>
+     First, we define the dimensionality of the network which we identify with the total number of neurons as well as the single neuron parameters.<br>
+     We here follow the common choice that the ratio between the number of excitatory and inhibitory neurons equals $4$ and that the connection probability between two arbitrary neurons is identical. <br>
+     The recurrent weights must *balance* the network, i.e. the average recurrent input to a neuron must be less or equal than $0$.<br>
+     This implies that we need to increase the strength of the inhibitory weights, the `g_factor`, to at least $4$. We choose $4.5$ to unambiguously place the network in the inhibition dominated regime. <br>
+     Finally, we set a parameter that controls the response properties of the network by scaling up the recurrent weights, the `q_factor`.
+     Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
+    """)
 
-st.markdown("""Defining the parameters for the network
- Next, we need to constrain the network with the needed parameters. <br>
- First, we define the dimensionality of the network which we identify with the total number of neurons as well as the single neuron parameters.<br>
- We here follow the common choice that the ratio between the number of excitatory and inhibitory neurons equals $4$ and that the connection probability between two arbitrary neurons is identical. <br>
- The recurrent weights must *balance* the network, i.e. the average recurrent input to a neuron must be less or equal than $0$.<br>
- This implies that we need to increase the strength of the inhibitory weights, the `g_factor`, to at least $4$. We choose $4.5$ to unambiguously place the network in the inhibition dominated regime. <br>
- Finally, we set a parameter that controls the response properties of the network by scaling up the recurrent weights, the `q_factor`.
- Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
-""")
+if intro:
+    display_intro1()
+    
 
 @st.cache(ttl=24*3600)
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
@@ -344,23 +358,27 @@ def cache_fig(states_balanced)->None:
     st.pyplot(fig)
 cache_fig(states_balanced)
 
-st.markdown("""
- We observe that after an initial period the network settles in a fixed point.<br>
- As it turns out, this is a global stable fixed point of the network dynamics: If we applied a small perturbation, the network would return to the stable state.<br>
- Such a network is unfit for performing meaningful computations, the dynamics is low-dimensional and rather poor.<br>
- To better understand this, we apply an additional analysis.
+def display_intro2():
+    st.markdown("""
+     We observe that after an initial period the network settles in a fixed point.<br>
+     As it turns out, this is a global stable fixed point of the network dynamics: If we applied a small perturbation, the network would return to the stable state.<br>
+     Such a network is unfit for performing meaningful computations, the dynamics is low-dimensional and rather poor.<br>
+     To better understand this, we apply an additional analysis.
 
- Further analysis
- We introduce the *auto-correlation function* $c(\tau)$. <br>
- With this function, one can assess the *memory* of the network as well as the richness of the dynamics. <br>
- Denoting the (temporally averaged) network activity by $a$, the *auto-covariance function* is the variance (here denoted $\mathrm{Cov}(\cdot, \cdot)$) of $a$ with a time shifted version of itself:
- $\begin{equation} c(\tau) = \mathrm{Cov}(a(t), a(t+\tau))\end{equation}$
-This means for positive $\tau$ the value of the auto-covariance function gives a measure for the similarity of the network state $a(t)$ and $a(t+\tau)$. <br>
-By comparing $c(\tau)$ with $c(0)$, we may assess the *memory* a network has of its previous states after $\tau$ time steps.<br>
-Note that the auto-covariance function is not normalised!<br>
-Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
-""")
+     Further analysis
+     We introduce the *auto-correlation function* $c(\tau)$. <br>
+     With this function, one can assess the *memory* of the network as well as the richness of the dynamics. <br>
+     Denoting the (temporally averaged) network activity by $a$, the *auto-covariance function* is the variance (here denoted $\mathrm{Cov}(\cdot, \cdot)$) of $a$ with a time shifted version of itself:
+     $\begin{equation} c(\tau) = \mathrm{Cov}(a(t), a(t+\tau))\end{equation}$
+    This means for positive $\tau$ the value of the auto-covariance function gives a measure for the similarity of the network state $a(t)$ and $a(t+\tau)$. <br>
+    By comparing $c(\tau)$ with $c(0)$, we may assess the *memory* a network has of its previous states after $\tau$ time steps.<br>
+    Note that the auto-covariance function is not normalised!<br>
+    Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
+    """)
 
+if intro:
+    display_intro2()
+    
 @st.cache(ttl=24*3600)
 def auto_cov_fct(acts, max_lag=100, offset=200):
     """Auto-correlation function of parallel spike trains.
