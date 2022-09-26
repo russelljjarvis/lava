@@ -30,6 +30,10 @@ from lava.magma.core.run_configs import Loihi1SimCfg
 # Import monitoring Process.
 from lava.proc.monitor.process import Monitor
 
+from lava.proc.dense.process import Dense
+from lava.proc.lif.process import LIF
+from convert_params import convert_rate_to_lif_params
+
 # Configurations for execution.
 num_steps = 1000
 
@@ -172,6 +176,7 @@ class RateEINetworkModel(PyLoihiProcessModel):
     bias_inh : np.ndarray = LavaPyType(np.ndarray, float)
     weights : np.ndarray = LavaPyType(np.ndarray, float)
 
+    @st.cache
     def __init__(self, proc_params):
         super().__init__(proc_params=proc_params)
         
@@ -220,6 +225,7 @@ class RateEINetworkModel(PyLoihiProcessModel):
         state_new += self.weights @ erf(state) # Add the recurrent input.
         return state_new
     
+    @st.cache
     def run_spk(self):
         """The run function that performs the actual computation during
         execution orchestrated by a PyLoihiProcessModel using the
@@ -250,6 +256,7 @@ st.markdown("""Defining the parameters for the network
  Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
 """)
 
+@st.cache
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     '''Generate connectivity drawn from a Gaussian distribution with mean 0
     and std of (2 * q_factor) ** 2  / dim.
@@ -348,6 +355,8 @@ By comparing $c(\tau)$ with $c(0)$, we may assess the *memory* a network has of 
 Note that the auto-covariance function is not normalised!<br>
 Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
 """)
+
+@st.cache
 def auto_cov_fct(acts, max_lag=100, offset=200):
     """Auto-correlation function of parallel spike trains.
     
@@ -387,13 +396,14 @@ def auto_cov_fct(acts, max_lag=100, offset=200):
 
 lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
-# Plotting the auto-correlation function.
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Lag')
-plt.ylabel('Covariance')
-plt.plot(lags, ac_fct_balanced)
-
-st.pyplot(fig)
+@st.cache
+def plot0(lags, ac_fct_balanced):->None
+    # Plotting the auto-correlation function.
+    fig = plt.figure(figsize=(7,5))
+    plt.xlabel('Lag')
+    plt.ylabel('Covariance')
+    plt.plot(lags, ac_fct_balanced)
+    st.pyplot(fig)
 
 st.markdown("""
 As expected, there is covariance has its maximum at a time lag of $0$. <br>
@@ -435,13 +445,13 @@ network_critical.run(run_cfg=rcfg, condition=run_cond)
 states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
 network_critical.stop()
 
-
-
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Time Step')
-plt.ylabel('State value')
-plt.plot(states_critical[:, :50])
-st.pyplot(fig)#plt.show()
+@st.cache
+def plot1(states_critical):
+    fig = plt.figure(figsize=(7,5))
+    plt.xlabel('Time Step')
+    plt.ylabel('State value')
+    plt.plot(states_critical[:, :50])
+    st.pyplot(fig)#plt.show()
 
 
 st.markdown("""
@@ -451,13 +461,14 @@ We find that after increasing the `q_factor`, the network shows a very different
 
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
-
-# Plotting the auto-correlation function.
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Lag')
-plt.ylabel('Correlation')
-plt.plot(lags, ac_fct_critical)
-st.pyplot(fig)
+@st.cache
+def plot2(lags, ac_fct_critical):
+    # Plotting the auto-correlation function.
+    fig = plt.figure(figsize=(7,5))
+    plt.xlabel('Lag')
+    plt.ylabel('Correlation')
+    plt.plot(lags, ac_fct_critical)
+    st.pyplot(fig)
 
 
 st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
@@ -471,16 +482,13 @@ We here use the behavior defined for the [LIF](https://github.com/lava-nc/lava/t
 Moreover, we would like to place the LIF E/I network in a similar dynamical regime as the rate network. This is a difficult task since the underlying single neurons dynamics are quite different. We here provide an approximate conversion function that allows for a parameter mapping and especially qualitatively retains properties of the auto-covariance function. <br>
 With the implementation below, we may either pass LIF specific parameters directly  **or** use the same parameters needed for instantiating the rate E/I network and then convert them automatically.<br>
 """)
-# In[ ]:
 
 
-from lava.proc.dense.process import Dense
-from lava.proc.lif.process import LIF
-from convert_params import convert_rate_to_lif_params
 
 @implements(proc=EINetwork, protocol=LoihiProtocol)
 @tag('lif_neurons')
 class SubEINetworkModel(AbstractSubProcessModel):
+    @st.cache
     def __init__(self, proc):
         
         convert = proc.proc_params.get('convert', False)
@@ -676,11 +684,14 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     return fig       
 
 
+@st.cache
+def plot3(spks_balanced):
+    fig = raster_plot(spks=spks_balanced)
+    st.pyplot(fig)
 
-
-fig = raster_plot(spks=spks_balanced)
-st.pyplot(fig)
-
+    
+st.markdown(type(spks_balanced))
+st.markdown(spks_balanced)
 #spike_frame = [{k,v for k,v in spks_balanced}]
 #st.dataframe(spike_frame)
 
@@ -715,23 +726,20 @@ ax2.plot(timesteps,
          (binned_sps_balanced - np.mean(binned_sps_balanced, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
 ax2.set_xlabel('Time Step')
 st.pyplot(f)
-#plt.show()
 
+st.markdown("""Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
+Next, we turn to the auto-covariance function.
+""")
+@st.cache
+def plot4(binned_sps_balanced):
+    lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
 
-# Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
-# Next, we turn to the auto-covariance function.
-
-# In[ ]:
-
-
-lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
-
-# Plotting the auto-covariance function.
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Lag')
-plt.ylabel('Covariance')
-plt.plot(lags, ac_fct)
-st.pyplot(fig)
+    # Plotting the auto-covariance function.
+    fig = plt.figure(figsize=(7,5))
+    plt.xlabel('Lag')
+    plt.ylabel('Covariance')
+    plt.plot(lags, ac_fct)
+    st.pyplot(fig)
 
 st.markdown("""
 Examining the auto-covariance function, we first note that again the overall values are small. 
@@ -772,11 +780,10 @@ data_u_critical = monitor_u.get_data()[lif_network_critical.name][lif_network_cr
 lif_network_critical.stop()
 
 
-
-
-
-fig = raster_plot(spks=spks_critical)
-st.pyplot(fig)
+@st.cache
+def plot5(spks_critical):
+    fig = raster_plot(spks=spks_critical)
+    st.pyplot(fig)
 st.markdown("""
  Here we see a qualitatively different network activity where the recurrent connections play a more dominant role: <br>
  At seemingly random times, single neurons enter an active states of variable length. <br>
@@ -806,7 +813,8 @@ ax2.set_title('Mean rate of LIF network')
 ax2.plot(timesteps,
          (binned_sps_critical - np.mean(binned_sps_critical, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
 ax2.set_xlabel('Time Step')
-plt.show()
+#plt.show()
+st.pyplot(f)
 
 
 st.markdown("""Again, we observe a similar behavior on the rate level:<br>
@@ -839,7 +847,7 @@ st.markdown("""
  We now examine these activations by having look at the excitatory, inhibitory as well as total activation provided to each neuron in both networks.
 """)
 
-
+@st.cache
 def calculate_activation(weights, spks, num_exc_neurons):
     """Calculate excitatory, inhibitory and total activation to neurons.
     
@@ -984,9 +992,7 @@ We see that the temporal evolution of the total activation in the low weights ca
  Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
  First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
 """)
-# In[ ]:
-
-
+@st.cache
 def _scaling_funct(params):
     '''Find optimal scaling function for float- to fixed-point mapping.
     
@@ -1252,20 +1258,20 @@ plt.ylabel('Covariance')
 plt.plot(lags, ac_fct_lif_critical_fixed, label='Bit accurate model')
 plt.plot(lags, ac_fct_lif_critical, label='Floating point model')
 plt.legend()
-#plt.show()
 st.pyplot(fig)
 
 
+st.markdown("""
+How to learn more?
 
-# ## How to learn more?
-# 
-# #### Follow the links below for deep-dive tutorials on the concepts in this tutorial:
-# - [Processes](../in_depth/tutorial02_processes.ipynb "Tutorial on Processes")
-# - [ProcessModel](../in_depth/tutorial03_process_models.ipynb "Tutorial on ProcessModels")
-# - [Connections](../in_depth/tutorial05_connect_processes.ipynb "Tutorial on Connecting Processe")
-# - [Execution](../in_depth/tutorial04_execution.ipynb "Tutorial on Executing Processes")
-# - [SubProcessModels](../in_depth/tutorial06_hierarchical_processes.ipynb) or [Hierarchical Processes](../in_depth/tutorial06_hierarchical_processes.ipynb)
-# 
-# If you want to find out more about Lava, have a look at the [Lava documentation](https://lava-nc.org/ "Lava Documentation") or dive into the [source code](https://github.com/lava-nc/lava/ "Lava Source Code").
-# 
-# To receive regular updates on the latest developments and releases of the Lava Software Framework please subscribe to the [INRC newsletter](http://eepurl.com/hJCyhb "INRC Newsletter").
+Follow the links below for deep-dive tutorials on the concepts in this tutorial:
+ - [Processes](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial02_processes.ipynb "Tutorial on Processes")
+ - [ProcessModel](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial03_process_models.ipynb "Tutorial on ProcessModels")
+ - [Connections](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial05_connect_processes.ipynb "Tutorial on Connecting Processe")
+ - [Execution](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial04_execution.ipynb "Tutorial on Executing Processes")
+ - [SubProcessModels](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial06_hierarchical_processes.ipynb) or [Hierarchical Processes](../in_depth/tutorial06_hierarchical_processes.ipynb)
+ 
+ If you want to find out more about Lava, have a look at the [Lava documentation](https://lava-nc.org/ "Lava Documentation") or dive into the [source code](https://github.com/lava-nc/lava/ "Lava Source Code").
+ 
+ To receive regular updates on the latest developments and releases of the Lava Software Framework please subscribe to the [INRC newsletter](http://eepurl.com/hJCyhb "INRC Newsletter").
+""")
