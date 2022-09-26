@@ -33,6 +33,9 @@ from lava.proc.monitor.process import Monitor
 from lava.proc.dense.process import Dense
 from lava.proc.lif.process import LIF
 from convert_params import convert_rate_to_lif_params
+# Import bit accurate ProcessModels.
+from lava.proc.dense.models import PyDenseModelBitAcc
+from lava.proc.lif.models import PyLifModelBitAcc
 
 # Configurations for execution.
 num_steps = 1000
@@ -461,6 +464,7 @@ We find that after increasing the `q_factor`, the network shows a very different
 
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
+
 @st.cache
 def plot2(lags, ac_fct_critical):
     # Plotting the auto-correlation function.
@@ -689,589 +693,609 @@ def plot3(spks_balanced):
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
 
+plot3(spks_balanced)
+    
     
 st.markdown(type(spks_balanced))
 st.markdown(spks_balanced)
-#spike_frame = [{k,v for k,v in spks_balanced}]
-#st.dataframe(spike_frame)
 
-st.markdown(""" After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
- Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
- This network state resembles qualitatively the fixed point observed above for the rate network. <br>
- Before we turn to the study of the auto-covariance we need to address a subtlety in the comparison of spiking and rate network. <br>
- Comparing spike trains and rates directly is difficult due dynamics of single spiking neurons: Most of the time, a neuron does not spike! <br>
- To overcome this problem and meaningfully compare quantities like the auto-covariance function, we follow the usual approach and bin the spikes. This means, we apply a sliding box-car window of a given length and count at each time step the spikes in that window to obtain an estimate of the rate. <br>
-""")
+def the_rest_of_the_app():
+    #spike_frame = [{k,v for k,v in spks_balanced}]
+    #st.dataframe(spike_frame)
 
-window_size = 25
-window = np.ones(window_size) # Window size of 25 time steps for binning.
-binned_sps_balanced = np.asarray([np.convolve(spks_balanced[i], window) for i in range(dim)])[:, :-window_size + 1]
+    st.markdown(""" After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
+     Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
+     This network state resembles qualitatively the fixed point observed above for the rate network. <br>
+     Before we turn to the study of the auto-covariance we need to address a subtlety in the comparison of spiking and rate network. <br>
+     Comparing spike trains and rates directly is difficult due dynamics of single spiking neurons: Most of the time, a neuron does not spike! <br>
+     To overcome this problem and meaningfully compare quantities like the auto-covariance function, we follow the usual approach and bin the spikes. This means, we apply a sliding box-car window of a given length and count at each time step the spikes in that window to obtain an estimate of the rate. <br>
+    """)
 
-st.markdown(""" After having an estimate of the rate, we compare the temporally-averaged mean rate of both networks in the first state.<br>
- To avoid boundary effects of the binning, we disregard time steps at the beginning and the end.""")
+    window_size = 25
+    window = np.ones(window_size) # Window size of 25 time steps for binning.
+    binned_sps_balanced = np.asarray([np.convolve(spks_balanced[i], window) for i in range(dim)])[:, :-window_size + 1]
 
-
-
-offset = 50
-timesteps = np.arange(0,1000, 1)[offset: -offset]
-
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
-ax1.set_title('Mean rate of Rate network')
-ax1.plot(timesteps,
-         (states_balanced - states_balanced.mean(axis=0)[np.newaxis,:]).mean(axis=1)[offset: -offset])
-ax1.set_ylabel('Mean rate')
-ax1.set_xlabel('Time Step')
-ax2.set_title('Mean rate of LIF network')
-ax2.plot(timesteps,
-         (binned_sps_balanced - np.mean(binned_sps_balanced, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
-ax2.set_xlabel('Time Step')
-st.pyplot(f)
-
-st.markdown("""Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
-Next, we turn to the auto-covariance function.
-""")
-@st.cache
-def plot4(binned_sps_balanced):
-    lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
-
-    # Plotting the auto-covariance function.
-    fig = plt.figure(figsize=(7,5))
-    plt.xlabel('Lag')
-    plt.ylabel('Covariance')
-    plt.plot(lags, ac_fct)
-    st.pyplot(fig)
-
-st.markdown("""
-Examining the auto-covariance function, we first note that again the overall values are small. 
-Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.
-This means that the network has no memory of its previous states: 
-Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. 
-Such a network is unfit to perform meaningful computation.
-
-#### Controlling the network
-Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.
-Dynamically, this increase again should result in a fundamentally different network state.
-""")
-
-
-num_steps = 1000
-rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
-run_cond = RunSteps(num_steps=num_steps)
-
-# Creating new new network with changed weights.
-lif_network_critical = EINetwork(**network_params_critical, convert=True)
-outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
-
-# Instantiate Monitors to record the voltage and the current of the LIF neurons
-monitor_v = Monitor()
-monitor_u = Monitor()
-
-lif_network_critical.outport.connect(outport_plug.a_in)
-monitor_v.probe(target=lif_network_critical.state,  num_steps=num_steps)
-monitor_u.probe(target=lif_network_critical.state_alt,  num_steps=num_steps)
-
-lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
-
-st.markdown("""Fetching spiking activity.""")
-spks_critical = outport_plug.data.get()
-data_v_critical = monitor_v.get_data()[lif_network_critical.name][lif_network_critical.state.name]
-data_u_critical = monitor_u.get_data()[lif_network_critical.name][lif_network_critical.state_alt.name]
-
-lif_network_critical.stop()
-
-
-@st.cache
-def plot5(spks_critical):
-    fig = raster_plot(spks=spks_critical)
-    st.pyplot(fig)
-st.markdown("""
- Here we see a qualitatively different network activity where the recurrent connections play a more dominant role: <br>
- At seemingly random times, single neurons enter an active states of variable length. <br>
- Next, we have a look at the auto-covariance function of the network, especially in direct comparison with the respective function of the rate network.
-""")
-
-
-window = np.ones(window_size)
-binned_sps_critical = np.asarray([np.convolve(spks_critical[i], window) for i in range(dim)])[:, :-window_size + 1]
-lags, ac_fct_lif_critical = auto_cov_fct(acts=binned_sps_critical.T)
-
-
-st.markdown("We again compare the rate of both networks in the same state.")
+    st.markdown(""" After having an estimate of the rate, we compare the temporally-averaged mean rate of both networks in the first state.<br>
+     To avoid boundary effects of the binning, we disregard time steps at the beginning and the end.""")
 
 
 
-offset = 50
-timesteps = np.arange(0,1000, 1)[offset: -offset]
+    offset = 50
+    timesteps = np.arange(0,1000, 1)[offset: -offset]
 
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
-ax1.set_title('Mean rate of Rate network')
-ax1.plot(timesteps,
-         (states_critical - states_critical.mean(axis=0)[np.newaxis,:]).mean(axis=1)[offset: -offset])
-ax1.set_ylabel('Mean rate')
-ax1.set_xlabel('Time Step')
-ax2.set_title('Mean rate of LIF network')
-ax2.plot(timesteps,
-         (binned_sps_critical - np.mean(binned_sps_critical, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
-ax2.set_xlabel('Time Step')
-#plt.show()
-st.pyplot(f)
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
+    ax1.set_title('Mean rate of Rate network')
+    ax1.plot(timesteps,
+             (states_balanced - states_balanced.mean(axis=0)[np.newaxis,:]).mean(axis=1)[offset: -offset])
+    ax1.set_ylabel('Mean rate')
+    ax1.set_xlabel('Time Step')
+    ax2.set_title('Mean rate of LIF network')
+    ax2.plot(timesteps,
+             (binned_sps_balanced - np.mean(binned_sps_balanced, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
+    ax2.set_xlabel('Time Step')
+    st.pyplot(f)
+
+    st.markdown("""Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
+    Next, we turn to the auto-covariance function.
+    """)
+    @st.cache
+    def plot4(binned_sps_balanced):
+        lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
+
+        # Plotting the auto-covariance function.
+        fig = plt.figure(figsize=(7,5))
+        plt.xlabel('Lag')
+        plt.ylabel('Covariance')
+        plt.plot(lags, ac_fct)
+        st.pyplot(fig)
+    _ = plot4(binned_sps_balanced)
+    st.markdown("""
+    Examining the auto-covariance function, we first note that again the overall values are small. 
+    Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.
+    This means that the network has no memory of its previous states: 
+    Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. 
+    Such a network is unfit to perform meaningful computation.
+
+    #### Controlling the network
+    Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.
+    Dynamically, this increase again should result in a fundamentally different network state.
+    """)
 
 
-st.markdown("""Again, we observe a similar behavior on the rate level:<br>
-In both networks the mean rate fluctuates on a longer time scale with larger values around the baseline in a similar range.<br>
-Next we compare the auto-covariance functions:
-""")
+    num_steps = 1000
+    rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
+    run_cond = RunSteps(num_steps=num_steps)
+
+    # Creating new new network with changed weights.
+    lif_network_critical = EINetwork(**network_params_critical, convert=True)
+    outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
+
+    # Instantiate Monitors to record the voltage and the current of the LIF neurons
+    monitor_v = Monitor()
+    monitor_u = Monitor()
+
+    lif_network_critical.outport.connect(outport_plug.a_in)
+    monitor_v.probe(target=lif_network_critical.state,  num_steps=num_steps)
+    monitor_u.probe(target=lif_network_critical.state_alt,  num_steps=num_steps)
+
+    lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
+
+    st.markdown("""Fetching spiking activity.""")
+    spks_critical = outport_plug.data.get()
+    data_v_critical = monitor_v.get_data()[lif_network_critical.name][lif_network_critical.state.name]
+    data_u_critical = monitor_u.get_data()[lif_network_critical.name][lif_network_critical.state_alt.name]
+
+    lif_network_critical.stop()
 
 
-
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
-ax1.plot(lags, ac_fct_lif_critical)
-ax1.set_title('Auto-Cov function: LIF network')
-ax1.set_xlabel('Lag')
-ax1.set_ylabel('Covariance')
-ax2.plot(lags, ac_fct_critical)
-ax2.set_title('Auto-Cov function: Rate network')
-ax2.set_xlabel('Lag')
-ax2.set_ylabel('Covariance')
-plt.tight_layout()
-st.pyplot(f)
-
-st.markdown("""
- We observe in the auto-covariance function of the LIF network a slowly decay, akin to the rate network. <br>
- Even though both auto-covariance functions are not identical, they qualitatively match in that both networks exhibit long-lasting temporal correlations and an activity at the edge of chaos. <br>
- This implies that both network are in a suitable regime for computation, e.g. in the context of reservoir computing.
-
- #### DIfferent recurrent activation regimes
- After having observed these two radically different dynamical states also in the LIF network, we next turn to the question how they come about. <br>
- The difference between both version of LIF E/I networks is in the recurrently provided activations. <br>
- We now examine these activations by having look at the excitatory, inhibitory as well as total activation provided to each neuron in both networks.
-""")
-
-@st.cache
-def calculate_activation(weights, spks, num_exc_neurons):
-    """Calculate excitatory, inhibitory and total activation to neurons.
-    
-    Parameters
-    ----------
-    
-    weights : np.ndarray (num_neurons, num_neurons)
-        Weights of recurrent connections
-    spks : np.ndarray (num_neurons, num_time_steps)
-        Spike times of neurons, 0 if neuron did not spike, 1 otherwise
-    num_exc_neurons : int
-        Number of excitatory neurons
+    @st.cache
+    def plot5(spks_critical):->None
+        fig = raster_plot(spks=spks_critical)
+        st.pyplot(fig)
+        return None
         
-    Returns
-    -------
-    
-    activation_exc : np.ndarray (num_neurons, num_time_steps)
-        Excitatory activation provided to neurons
-    activation_inh : np.ndarray (num_neurons, num_time_steps)
-        Inhibitory activation provided to neurons
-    activations_total : np.ndarray (num_neurons, num_time_steps)
-        Total activation provided to neurons
-    """
-    
-    weights_exc = weights[:, :num_exc_neurons]
-    weights_inh = weights[:, num_exc_neurons:]
-    
-    spks_exc = spks[:num_exc_neurons]
-    spks_inh = spks[num_exc_neurons:]
-    
-    activation_exc = np.matmul(weights_exc, spks_exc)
-    activation_inh = np.matmul(weights_inh, spks_inh)
-    
-    activation_total = activation_exc + activation_inh
-    
-    return activation_exc, activation_inh, activation_total
+    _ = plot5(spks_critical)    
+    st.markdown("""
+     Here we see a qualitatively different network activity where the recurrent connections play a more dominant role: <br>
+     At seemingly random times, single neurons enter an active states of variable length. <br>
+     Next, we have a look at the auto-covariance function of the network, especially in direct comparison with the respective function of the rate network.
+    """)
 
 
-# Since the network needs some time to settle in it's dynamical state, we discard the first $200$ time steps.
-
-# In[ ]:
-
-
-offset = 200
-
-act_exc_balanced, act_inh_balanced, act_tot_balanced     = calculate_activation(lif_network_balanced.proc_params.get('weights'),
-                          spks_balanced[:,offset:],
-                          network_params_balanced['shape_exc'])
-
-act_exc_critical, act_inh_critical, act_tot_critical     = calculate_activation(lif_network_critical.proc_params.get('weights'),
-                          spks_critical[:,offset:],
-                          network_params_balanced['shape_exc'])
+    window = np.ones(window_size)
+    binned_sps_critical = np.asarray([np.convolve(spks_critical[i], window) for i in range(dim)])[:, :-window_size + 1]
+    lags, ac_fct_lif_critical = auto_cov_fct(acts=binned_sps_critical.T)
 
 
-# First, we look at the distribution of activation of a random neuron in both network states.
-
-# In[ ]:
-
-
-rnd_neuron = 4
-
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
-ax1.set_title('Low weights')
-ax1.set_xlabel('Activation')
-ax1.set_ylabel('Density')
-ax1.hist(act_exc_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='E')
-ax1.hist(act_inh_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='I'),
-ax1.hist(act_tot_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='Total')
-ax1.legend()
-
-ax2.set_title('High weights')
-ax2.set_xlabel('Activation')
-ax2.set_ylabel('Density')
-ax2.hist(act_exc_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='E')
-ax2.hist(act_inh_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='I')
-ax2.hist(act_tot_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='Total')
-ax2.legend()
-
-plt.tight_layout()
-st.pyplot(f)
-#plt.show()
-
-
-st.markdown(""" Next, we plot the distribution of the temporal average:""")
+    st.markdown("We again compare the rate of both networks in the same state.")
 
 
 
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
-ax1.set_title('Low weights')
-ax1.set_xlabel('Activation')
-ax1.set_ylabel('Density')
-ax1.hist(act_exc_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='E')
-ax1.hist(act_inh_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='I'),
-ax1.hist(act_tot_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='Total')
-ax1.legend()
+    offset = 50
+    timesteps = np.arange(0,1000, 1)[offset: -offset]
 
-ax2.set_title('High weights')
-ax2.set_xlabel('Activation')
-ax2.set_ylabel('Density')
-ax2.hist(act_exc_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='E')
-ax2.hist(act_inh_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='I')
-ax2.hist(act_tot_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='Total')
-ax2.legend()
-
-plt.tight_layout()
-st.pyplot(f)
-
-st.markdown("""
- We first note that the the total activation is close to zero with a slight shift to negative values, this prevents the divergence of activity. <br>
- Secondly, we observe that the width of the distributions is orders of magnitude larger in the high weight case as compared to the low weight network. <br>
- Finally, we look at the evolution of the mean activation over time. To this end we plot three random sample:
-""")
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
+    ax1.set_title('Mean rate of Rate network')
+    ax1.plot(timesteps,
+             (states_critical - states_critical.mean(axis=0)[np.newaxis,:]).mean(axis=1)[offset: -offset])
+    ax1.set_ylabel('Mean rate')
+    ax1.set_xlabel('Time Step')
+    ax2.set_title('Mean rate of LIF network')
+    ax2.plot(timesteps,
+             (binned_sps_critical - np.mean(binned_sps_critical, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
+    ax2.set_xlabel('Time Step')
+    st.pyplot(f)
 
 
-time_steps = np.arange(offset, num_steps, 1)
+    st.markdown("""Again, we observe a similar behavior on the rate level:<br>
+    In both networks the mean rate fluctuates on a longer time scale with larger values around the baseline in a similar range.<br>
+    Next we compare the auto-covariance functions:
+    """)
 
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(8,4))
-ax1.set_title('Low weights')
-ax1.set_xlabel('Time step')
-ax1.set_ylabel('Activation')
-for i in range(3):
-    ax1.plot(time_steps, act_tot_balanced[i], alpha=0.7)
+    @st.cache
+    def fig6(lags, ac_fct_lif_critical,ac_fct_critical):
+        f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
+        ax1.plot(lags, ac_fct_lif_critical)
+        ax1.set_title('Auto-Cov function: LIF network')
+        ax1.set_xlabel('Lag')
+        ax1.set_ylabel('Covariance')
+        ax2.plot(lags, ac_fct_critical)
+        ax2.set_title('Auto-Cov function: Rate network')
+        ax2.set_xlabel('Lag')
+        ax2.set_ylabel('Covariance')
+        plt.tight_layout()
+        st.pyplot(f)
+
+    st.markdown("""
+     We observe in the auto-covariance function of the LIF network a slowly decay, akin to the rate network. <br>
+     Even though both auto-covariance functions are not identical, they qualitatively match in that both networks exhibit long-lasting temporal correlations and an activity at the edge of chaos. <br>
+     This implies that both network are in a suitable regime for computation, e.g. in the context of reservoir computing.
+
+     #### DIfferent recurrent activation regimes
+     After having observed these two radically different dynamical states also in the LIF network, we next turn to the question how they come about. <br>
+     The difference between both version of LIF E/I networks is in the recurrently provided activations. <br>
+     We now examine these activations by having look at the excitatory, inhibitory as well as total activation provided to each neuron in both networks.
+    """)
+
+    #@st.cache
+    def calculate_activation(weights, spks, num_exc_neurons):
+        """Calculate excitatory, inhibitory and total activation to neurons.
+
+        Parameters
+        ----------
+
+        weights : np.ndarray (num_neurons, num_neurons)
+            Weights of recurrent connections
+        spks : np.ndarray (num_neurons, num_time_steps)
+            Spike times of neurons, 0 if neuron did not spike, 1 otherwise
+        num_exc_neurons : int
+            Number of excitatory neurons
+
+        Returns
+        -------
+
+        activation_exc : np.ndarray (num_neurons, num_time_steps)
+            Excitatory activation provided to neurons
+        activation_inh : np.ndarray (num_neurons, num_time_steps)
+            Inhibitory activation provided to neurons
+        activations_total : np.ndarray (num_neurons, num_time_steps)
+            Total activation provided to neurons
+        """
+
+        weights_exc = weights[:, :num_exc_neurons]
+        weights_inh = weights[:, num_exc_neurons:]
+
+        spks_exc = spks[:num_exc_neurons]
+        spks_inh = spks[num_exc_neurons:]
+
+        activation_exc = np.matmul(weights_exc, spks_exc)
+        activation_inh = np.matmul(weights_inh, spks_inh)
+
+        activation_total = activation_exc + activation_inh
+
+        return activation_exc, activation_inh, activation_total
 
 
-ax2.set_title('High weights')
-ax2.set_xlabel('Time step')
-ax2.set_ylabel('Activation')
-for i in range(3):
-    ax2.plot(time_steps, act_tot_critical[i], alpha=0.7)
-
-plt.tight_layout()
-st.pyplot(f)
+    # Since the network needs some time to settle in it's dynamical state, we discard the first $200$ time steps.
 
 
-st.markdown("""
-We see that the temporal evolution of the total activation in the low weights case is much narrower than in the high weights network. <br>
- Moreover, we see that in the high weights network, the fluctuations of the activations evolve on a very long time scale as compared to the other network. <br>
- This implies that a neuron can sustain it's active, bursting state over longer periods of time leading to memory in the network as well as activity at the edge of chaos.<br>
 
- ### Running a ProcessModel bit-accurate with Loihi
- So far, we have used neuron models and weights that are internally represented as floating point numbers. <br>
- Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
- First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
-""")
-@st.cache
-def _scaling_funct(params):
-    '''Find optimal scaling function for float- to fixed-point mapping.
-    
-    Parameter
-    ---------
-    params : dict
-        Dictionary containing information required for float- to fixed-point mapping
-        
-    Returns
-    ------
-    scaling_funct : callable
-        Optimal scaling function for float- to fixed-point conversion
-    ''' 
-    sorted_params = dict(sorted(params.items(), key=lambda x: np.max(np.abs(x[1]['val'])), reverse=True))
-    
-    # Initialize scaling function.
-    scaling_funct = None
-    
-    for key, val in sorted_params.items(): 
-        if val['signed'] == 's':
-            signed_shift = 1
-        else:
-            signed_shift = 0
-            
-        if np.max(val['val']) == np.max(np.abs(val['val'])):
-            max_abs = True
-            max_abs_val = np.max(val['val'])
-        else:
-            max_abs = False
-            max_abs_val = np.max(np.abs(val['val']))
-            
-        if max_abs:
-            rep_val = 2**(val['bits'] - signed_shift) - 1
-        else:
-            rep_val = 2**(val['bits'] - signed_shift)
-        
-        max_shift = np.max(val['shift'])
-        
-        max_rep_val = rep_val * 2**max_shift
-      
-        if scaling_funct:
-            scaled_vals = scaling_funct(val['val'])
 
-            max_abs_scaled_vals = np.max(np.abs(scaled_vals))
-            if max_abs_scaled_vals <= max_rep_val:
-                continue
+    offset = 200
+
+    act_exc_balanced, act_inh_balanced, act_tot_balanced     = calculate_activation(lif_network_balanced.proc_params.get('weights'),
+                              spks_balanced[:,offset:],
+                              network_params_balanced['shape_exc'])
+
+    act_exc_critical, act_inh_critical, act_tot_critical     = calculate_activation(lif_network_critical.proc_params.get('weights'),
+                              spks_critical[:,offset:],
+                              network_params_balanced['shape_exc'])
+
+
+    # First, we look at the distribution of activation of a random neuron in both network states.
+
+    # In[ ]:
+
+
+    rnd_neuron = 4
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
+    ax1.set_title('Low weights')
+    ax1.set_xlabel('Activation')
+    ax1.set_ylabel('Density')
+    ax1.hist(act_exc_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='E')
+    ax1.hist(act_inh_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='I'),
+    ax1.hist(act_tot_balanced[rnd_neuron], bins=10, alpha=0.5, density=True, label='Total')
+    ax1.legend()
+
+    ax2.set_title('High weights')
+    ax2.set_xlabel('Activation')
+    ax2.set_ylabel('Density')
+    ax2.hist(act_exc_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='E')
+    ax2.hist(act_inh_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='I')
+    ax2.hist(act_tot_critical[rnd_neuron], bins=10, alpha=0.5, density=True, label='Total')
+    ax2.legend()
+
+    plt.tight_layout()
+    st.pyplot(f)
+
+
+    st.markdown(""" Next, we plot the distribution of the temporal average:""")
+
+
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
+    ax1.set_title('Low weights')
+    ax1.set_xlabel('Activation')
+    ax1.set_ylabel('Density')
+    ax1.hist(act_exc_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='E')
+    ax1.hist(act_inh_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='I'),
+    ax1.hist(act_tot_balanced.mean(axis=0), bins=10, alpha=0.5, density=True, label='Total')
+    ax1.legend()
+
+    ax2.set_title('High weights')
+    ax2.set_xlabel('Activation')
+    ax2.set_ylabel('Density')
+    ax2.hist(act_exc_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='E')
+    ax2.hist(act_inh_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='I')
+    ax2.hist(act_tot_critical.mean(axis=0), bins=10, alpha=0.5, density=True, label='Total')
+    ax2.legend()
+
+    plt.tight_layout()
+    st.pyplot(f)
+
+    st.markdown("""
+     We first note that the the total activation is close to zero with a slight shift to negative values, this prevents the divergence of activity. <br>
+     Secondly, we observe that the width of the distributions is orders of magnitude larger in the high weight case as compared to the low weight network. <br>
+     Finally, we look at the evolution of the mean activation over time. To this end we plot three random sample:
+    """)
+
+
+    time_steps = np.arange(offset, num_steps, 1)
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(8,4))
+    ax1.set_title('Low weights')
+    ax1.set_xlabel('Time step')
+    ax1.set_ylabel('Activation')
+    for i in range(3):
+        ax1.plot(time_steps, act_tot_balanced[i], alpha=0.7)
+
+
+    ax2.set_title('High weights')
+    ax2.set_xlabel('Time step')
+    ax2.set_ylabel('Activation')
+    for i in range(3):
+        ax2.plot(time_steps, act_tot_critical[i], alpha=0.7)
+
+    plt.tight_layout()
+    st.pyplot(f)
+
+
+    st.markdown("""
+    We see that the temporal evolution of the total activation in the low weights case is much narrower than in the high weights network. <br>
+     Moreover, we see that in the high weights network, the fluctuations of the activations evolve on a very long time scale as compared to the other network. <br>
+     This implies that a neuron can sustain it's active, bursting state over longer periods of time leading to memory in the network as well as activity at the edge of chaos.<br>
+
+     ### Running a ProcessModel bit-accurate with Loihi
+     So far, we have used neuron models and weights that are internally represented as floating point numbers. <br>
+     Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
+     First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
+    """)
+    @st.cache
+    def _scaling_funct(params):
+        '''Find optimal scaling function for float- to fixed-point mapping.
+
+        Parameter
+        ---------
+        params : dict
+            Dictionary containing information required for float- to fixed-point mapping
+
+        Returns
+        ------
+        scaling_funct : callable
+            Optimal scaling function for float- to fixed-point conversion
+        ''' 
+        sorted_params = dict(sorted(params.items(), key=lambda x: np.max(np.abs(x[1]['val'])), reverse=True))
+
+        # Initialize scaling function.
+        scaling_funct = None
+
+        for key, val in sorted_params.items(): 
+            if val['signed'] == 's':
+                signed_shift = 1
+            else:
+                signed_shift = 0
+
+            if np.max(val['val']) == np.max(np.abs(val['val'])):
+                max_abs = True
+                max_abs_val = np.max(val['val'])
+            else:
+                max_abs = False
+                max_abs_val = np.max(np.abs(val['val']))
+
+            if max_abs:
+                rep_val = 2**(val['bits'] - signed_shift) - 1
+            else:
+                rep_val = 2**(val['bits'] - signed_shift)
+
+            max_shift = np.max(val['shift'])
+
+            max_rep_val = rep_val * 2**max_shift
+
+            if scaling_funct:
+                scaled_vals = scaling_funct(val['val'])
+
+                max_abs_scaled_vals = np.max(np.abs(scaled_vals))
+                if max_abs_scaled_vals <= max_rep_val:
+                    continue
+                else:
+                    p1 = max_rep_val
+                    p2 = max_abs_val
+
             else:
                 p1 = max_rep_val
-                p2 = max_abs_val
-        
-        else:
-            p1 = max_rep_val
-            p2 = max_abs_val         
-        
-        scaling_funct = lambda x: p1 / p2 * x
-        
-    return scaling_funct
+                p2 = max_abs_val         
 
-def float2fixed_lif_parameter(lif_params):
-    '''Float- to fixed-point mapping for LIF parameters.
+            scaling_funct = lambda x: p1 / p2 * x
+
+        return scaling_funct
+
+    @st.cache
+    def float2fixed_lif_parameter(lif_params):
+        '''Float- to fixed-point mapping for LIF parameters.
+
+        Parameters
+        ---------
+        lif_params : dict
+            Dictionary with parameters for LIF network with floating-point ProcModel
+
+        Returns
+        ------
+        lif_params_fixed : dict
+            Dictionary with parameters for LIF network with fixed-point ProcModel
+        '''
+
+        scaling_funct = _scaling_funct(params)
+
+        bias_mant_bits = params['bias']['bits']
+        scaled_bias = scaling_funct(params['bias']['val'])[0]
+        bias_exp = int(np.ceil(np.log2(scaled_bias) - bias_mant_bits + 1))
+        if bias_exp <=0:
+            bias_exp = 0
+
+
+        weight_mant_bits = params['weights']['bits']    
+        scaled_weights = np.round(scaling_funct(params['weights']['val']))
+        weight_exp = int(np.ceil(np.log2(scaled_bias) - weight_mant_bits + 1))
+        weight_exp = np.max(weight_exp) - 6
+        if weight_exp <=0:
+            diff = weight_exp
+            weight_exp = 0
+
+
+        bias_mant = int(scaled_bias // 2**bias_exp)
+        weights = scaled_weights.astype(np.int32)
+
+        lif_params_fixed = {'vth' : int(scaling_funct(params['vth']['val']) // 2**params['vth']['shift'][0]),
+                            'bias_mant': bias_mant,
+                            'bias_exp': bias_exp,
+                            'weights': np.round(scaled_weights / (2 ** params['weights']['shift'][0])).astype(np.int32),
+                            'weight_exp': weight_exp}
+
+        return lif_params_fixed
+
+    @st.cache
+    def scaling_funct_dudv(val):
+        '''Scaling function for du, dv in LIF
+        ''' 
+        assert val < 1, 'Passed value must be smaller than 1'
+
+        return np.round(val * 2 ** 12).astype(np.int32)
+
+    st.markdown("""
+     After having defined some primitive conversion functionality we next convert the parameters for the critical network. 
+     To constrain the values that we need to represent in the bit-accurate model, we have to find the dynamical range of the state parameters of the network, namely ```u``` and ```v``` of the LIF neurons.
+    """)
+
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
+    ax1.set_title('u')
+    ax1.set_xlabel('Current')
+    ax1.set_ylabel('Density')
+    ax1.hist(data_u_critical.flatten(), bins='auto', density=True)
+    ax1.legend()
+
+    ax2.set_title('v')
+    ax2.set_xlabel('Voltage')
+    ax2.set_ylabel('Density')
+    ax2.hist(data_v_critical.flatten(), bins='auto', density=True)
+    ax2.legend()
+
+    plt.tight_layout()
+    st.pyplot(f)
+
+
+    st.markdown("""
+     We note that for both variables the distributions attain large (small) values with low probability. We hence will remove them in the dynamical range to increase the precision of the overall representation. We do so by choosing $0.2$ and $0.8$ quantiles as minimal resp. maximal values for the dynamic ranges.<br>
+     We finally also need to pass some information about the concrete implementation, e.g. the precision and the bit shifts performed. <br>
+    """)
+
+
+    u_low = np.quantile(data_u_critical.flatten(), 0.2)
+    u_high = np.quantile(data_u_critical.flatten(), 0.8)
+    v_low = np.quantile(data_v_critical.flatten(), 0.2)
+    v_high = np.quantile(data_v_critical.flatten(), 0.8)
+
+    lif_params_critical = convert_rate_to_lif_params(**network_params_critical)
+    weights = lif_params_critical['weights']
+    bias = lif_params_critical['bias_mant_exc']
+
+    params = {'vth': {'bits': 17, 'signed': 'u', 'shift': np.array([6]), 'val': np.array([1])},
+              'u': {'bits': 24, 'signed': 's', 'shift': np.array([0]), 'val': np.array([u_low, u_high])},
+              'v': {'bits': 24, 'signed': 's', 'shift': np.array([0]), 'val': np.array([v_low, v_high])},
+              'bias': {'bits': 13, 'signed': 's', 'shift': np.arange(0, 3, 1), 'val': np.array([bias])},
+              'weights' : {'bits': 8, 'signed': 's', 'shift': np.arange(6,22,1), 'val': weights}}
+
+    mapped_params = float2fixed_lif_parameter(params)
+
+
+    st.markdown(""" Using the mapped parameters, we construct the fully-fledged parameter dictionary for the E/I network Process using the LIF SubProcessModel.""")
+
+
+
+    # Set up parameters for bit accurate model
+    lif_params_critical_fixed = {'shape_exc': lif_params_critical['shape_exc'],
+                                 'shape_inh': lif_params_critical['shape_inh'],
+                                 'g_factor': lif_params_critical['g_factor'],
+                                 'q_factor': lif_params_critical['q_factor'],
+                                 'vth_exc': mapped_params['vth'],
+                                 'vth_inh': mapped_params['vth'],
+                                 'bias_mant_exc': mapped_params['bias_mant'],
+                                 'bias_exp_exc': mapped_params['bias_exp'],
+                                 'bias_mant_inh': mapped_params['bias_mant'],
+                                 'bias_exp_inh': mapped_params['bias_exp'],
+                                 'weights': mapped_params['weights'],
+                                 'weight_exp': mapped_params['weight_exp'],
+                                 'du_exc': scaling_funct_dudv(lif_params_critical['du_exc']),
+                                 'dv_exc': scaling_funct_dudv(lif_params_critical['dv_exc']),
+                                 'du_inh': scaling_funct_dudv(lif_params_critical['du_inh']),
+                                 'dv_inh': scaling_funct_dudv(lif_params_critical['dv_inh'])}
+
+
+    st.markdown(""" Execution of bit accurate model
+    Configurations for execution.
+    """)
+
+
+
+
+   
+    num_steps = 1000
+    run_cond = RunSteps(num_steps=num_steps)
+
+    # Define custom Run Config for execution of bit accurate models.
+    class CustomRunConfigFixed(Loihi1SimCfg):
+        def select(self, proc, proc_models):
+            # Customize run config to always use float model for io.sink.RingBuffer.
+            if isinstance(proc, io.sink.RingBuffer):
+                return io.sink.PyReceiveModelFloat
+            if isinstance(proc, LIF):
+                return PyLifModelBitAcc
+            elif isinstance(proc, Dense):
+                return PyDenseModelBitAcc
+            else:
+                return super().select(proc, proc_models)
+
+    @st.cache        
+    def do_run_0():
+        rcfg = CustomRunConfigFixed(select_tag='lif_neurons', select_sub_proc_model=True)
+
+        lif_network_critical_fixed = EINetwork(**lif_params_critical_fixed)
+        outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
+
+        lif_network_critical_fixed.outport.connect(outport_plug.a_in)
+
+        lif_network_critical_fixed.run(condition=run_cond, run_cfg=rcfg)
+
+        # Fetching spiking activity.
+        spks_critical_fixed = outport_plug.data.get()
+
+        lif_network_critical_fixed.stop()
+        return spks_critical_fixed
+
+    spks_critical_fixed = do_run_0()
+
+
+    @st.cache
+    def plot_5(spks_critical_fixed)->None:
+        fig = raster_plot(spks=spks_critical, color='orange', alpha=0.3)
+        raster_plot(spks=spks_critical_fixed, fig=fig, alpha=0.3, color='b')
+        st.pyplot(fig)
+        return NOne
+    _ = plot_5(spks_critical_fixed)
+
+    st.markdown("""
+     Comparing the spike times after the parameter conversion, we find that after the first initial time steps, the spike times start diverging, even though certain structural similarities remain. <br>
+     This, however, is expected: Since the systems is in a chaotic state, slight differences in the variables lead to a completely different output after some time steps. This is generally the behavior in spiking neural network.<br>
+     **But** the network stays in a *very similar dynamical state* with *similar activity*, as can be seen when examining the overall behavior of the rate as well as auto-covariance function.
+    """)
+
+
+    window = np.ones(window_size)
+    binned_sps_critical_fixed = np.asarray([
+        np.convolve(spks_critical_fixed[i], window) for i in range(dim)])[:,:-window_size +1]
+    lags, ac_fct_lif_critical_fixed = auto_cov_fct(acts=binned_sps_critical_fixed.T)
+
+
+
+
+    offset = 50
+    timesteps = np.arange(0,1000, 1)[offset: -offset]
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
+    ax1.set_title('Mean rate of floating-point LIF network')
+    ax1.plot(timesteps,
+             (binned_sps_critical - np.mean(binned_sps_critical, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
+    ax1.set_ylabel('Mean rate')
+    ax1.set_xlabel('Time Step')
+    ax2.set_title('Mean rate of fixed-point LIF network')
+    ax2.plot(timesteps,
+             (binned_sps_critical_fixed
+              - np.mean(binned_sps_critical_fixed, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
+    ax2.set_xlabel('Time Step')
+    st.pyplot(f)
+
+    @st.cache
+    def covplot(lags,ac_fct_lif_critical_fixed,ac_fct_lif_critical)->None:
+        # Plotting the auto-correlation function.
+        fig = plt.figure(figsize=(7,5))
+        plt.xlabel('Lag')
+        plt.ylabel('Covariance')
+        plt.plot(lags, ac_fct_lif_critical_fixed, label='Bit accurate model')
+        plt.plot(lags, ac_fct_lif_critical, label='Floating point model')
+        plt.legend()
+        st.pyplot(fig)
+        return None
+
+    _ = covplot(lags,ac_fct_lif_critical_fixed,ac_fct_lif_critical)
+
+    st.markdown("""
+    How to learn more?
+
+    Follow the links below for deep-dive tutorials on the concepts in this tutorial:
+     - [Processes](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial02_processes.ipynb "Tutorial on Processes")
+     - [ProcessModel](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial03_process_models.ipynb "Tutorial on ProcessModels")
+     - [Connections](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial05_connect_processes.ipynb "Tutorial on Connecting Processe")
+     - [Execution](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial04_execution.ipynb "Tutorial on Executing Processes")
+     - [SubProcessModels](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial06_hierarchical_processes.ipynb) or [Hierarchical Processes](../in_depth/tutorial06_hierarchical_processes.ipynb)
+
+     If you want to find out more about Lava, have a look at the [Lava documentation](https://lava-nc.org/ "Lava Documentation") or dive into the [source code](https://github.com/lava-nc/lava/ "Lava Source Code").
+
+     To receive regular updates on the latest developments and releases of the Lava Software Framework please subscribe to the [INRC newsletter](http://eepurl.com/hJCyhb "INRC Newsletter").
+    """)
     
-    Parameters
-    ---------
-    lif_params : dict
-        Dictionary with parameters for LIF network with floating-point ProcModel
-        
-    Returns
-    ------
-    lif_params_fixed : dict
-        Dictionary with parameters for LIF network with fixed-point ProcModel
-    '''
-    
-    scaling_funct = _scaling_funct(params)
-    
-    bias_mant_bits = params['bias']['bits']
-    scaled_bias = scaling_funct(params['bias']['val'])[0]
-    bias_exp = int(np.ceil(np.log2(scaled_bias) - bias_mant_bits + 1))
-    if bias_exp <=0:
-        bias_exp = 0
-    
-    
-    weight_mant_bits = params['weights']['bits']    
-    scaled_weights = np.round(scaling_funct(params['weights']['val']))
-    weight_exp = int(np.ceil(np.log2(scaled_bias) - weight_mant_bits + 1))
-    weight_exp = np.max(weight_exp) - 6
-    if weight_exp <=0:
-        diff = weight_exp
-        weight_exp = 0
-
-    
-    bias_mant = int(scaled_bias // 2**bias_exp)
-    weights = scaled_weights.astype(np.int32)
-    
-    lif_params_fixed = {'vth' : int(scaling_funct(params['vth']['val']) // 2**params['vth']['shift'][0]),
-                        'bias_mant': bias_mant,
-                        'bias_exp': bias_exp,
-                        'weights': np.round(scaled_weights / (2 ** params['weights']['shift'][0])).astype(np.int32),
-                        'weight_exp': weight_exp}
-    
-    return lif_params_fixed
-
-def scaling_funct_dudv(val):
-    '''Scaling function for du, dv in LIF
-    ''' 
-    assert val < 1, 'Passed value must be smaller than 1'
-    
-    return np.round(val * 2 ** 12).astype(np.int32)
-
-st.markdown("""
- After having defined some primitive conversion functionality we next convert the parameters for the critical network. 
- To constrain the values that we need to represent in the bit-accurate model, we have to find the dynamical range of the state parameters of the network, namely ```u``` and ```v``` of the LIF neurons.
-""")
-
-
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
-ax1.set_title('u')
-ax1.set_xlabel('Current')
-ax1.set_ylabel('Density')
-ax1.hist(data_u_critical.flatten(), bins='auto', density=True)
-ax1.legend()
-
-ax2.set_title('v')
-ax2.set_xlabel('Voltage')
-ax2.set_ylabel('Density')
-ax2.hist(data_v_critical.flatten(), bins='auto', density=True)
-ax2.legend()
-
-plt.tight_layout()
-st.pyplot(f)
-
-
-st.markdown("""
- We note that for both variables the distributions attain large (small) values with low probability. We hence will remove them in the dynamical range to increase the precision of the overall representation. We do so by choosing $0.2$ and $0.8$ quantiles as minimal resp. maximal values for the dynamic ranges.<br>
- We finally also need to pass some information about the concrete implementation, e.g. the precision and the bit shifts performed. <br>
-""")
-
-
-u_low = np.quantile(data_u_critical.flatten(), 0.2)
-u_high = np.quantile(data_u_critical.flatten(), 0.8)
-v_low = np.quantile(data_v_critical.flatten(), 0.2)
-v_high = np.quantile(data_v_critical.flatten(), 0.8)
-
-lif_params_critical = convert_rate_to_lif_params(**network_params_critical)
-weights = lif_params_critical['weights']
-bias = lif_params_critical['bias_mant_exc']
-
-params = {'vth': {'bits': 17, 'signed': 'u', 'shift': np.array([6]), 'val': np.array([1])},
-          'u': {'bits': 24, 'signed': 's', 'shift': np.array([0]), 'val': np.array([u_low, u_high])},
-          'v': {'bits': 24, 'signed': 's', 'shift': np.array([0]), 'val': np.array([v_low, v_high])},
-          'bias': {'bits': 13, 'signed': 's', 'shift': np.arange(0, 3, 1), 'val': np.array([bias])},
-          'weights' : {'bits': 8, 'signed': 's', 'shift': np.arange(6,22,1), 'val': weights}}
-
-mapped_params = float2fixed_lif_parameter(params)
-
-
-st.markdown(""" Using the mapped parameters, we construct the fully-fledged parameter dictionary for the E/I network Process using the LIF SubProcessModel.""")
-
-
-
-# Set up parameters for bit accurate model
-lif_params_critical_fixed = {'shape_exc': lif_params_critical['shape_exc'],
-                             'shape_inh': lif_params_critical['shape_inh'],
-                             'g_factor': lif_params_critical['g_factor'],
-                             'q_factor': lif_params_critical['q_factor'],
-                             'vth_exc': mapped_params['vth'],
-                             'vth_inh': mapped_params['vth'],
-                             'bias_mant_exc': mapped_params['bias_mant'],
-                             'bias_exp_exc': mapped_params['bias_exp'],
-                             'bias_mant_inh': mapped_params['bias_mant'],
-                             'bias_exp_inh': mapped_params['bias_exp'],
-                             'weights': mapped_params['weights'],
-                             'weight_exp': mapped_params['weight_exp'],
-                             'du_exc': scaling_funct_dudv(lif_params_critical['du_exc']),
-                             'dv_exc': scaling_funct_dudv(lif_params_critical['dv_exc']),
-                             'du_inh': scaling_funct_dudv(lif_params_critical['du_inh']),
-                             'dv_inh': scaling_funct_dudv(lif_params_critical['dv_inh'])}
-
-
-# #### Execution of bit accurate model
-
-
-
-# Import bit accurate ProcessModels.
-from lava.proc.dense.models import PyDenseModelBitAcc
-from lava.proc.lif.models import PyLifModelBitAcc
-
-# Configurations for execution.
-num_steps = 1000
-run_cond = RunSteps(num_steps=num_steps)
-
-# Define custom Run Config for execution of bit accurate models.
-class CustomRunConfigFixed(Loihi1SimCfg):
-    def select(self, proc, proc_models):
-        # Customize run config to always use float model for io.sink.RingBuffer.
-        if isinstance(proc, io.sink.RingBuffer):
-            return io.sink.PyReceiveModelFloat
-        if isinstance(proc, LIF):
-            return PyLifModelBitAcc
-        elif isinstance(proc, Dense):
-            return PyDenseModelBitAcc
-        else:
-            return super().select(proc, proc_models)
-        
-rcfg = CustomRunConfigFixed(select_tag='lif_neurons', select_sub_proc_model=True)
-
-lif_network_critical_fixed = EINetwork(**lif_params_critical_fixed)
-outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
-
-lif_network_critical_fixed.outport.connect(outport_plug.a_in)
-
-lif_network_critical_fixed.run(condition=run_cond, run_cfg=rcfg)
-
-# Fetching spiking activity.
-spks_critical_fixed = outport_plug.data.get()
-
-lif_network_critical_fixed.stop()
-
-
-# In[ ]:
-
-
-fig = raster_plot(spks=spks_critical, color='orange', alpha=0.3)
-raster_plot(spks=spks_critical_fixed, fig=fig, alpha=0.3, color='b')
-st.pyplot(fig)
-
-st.markdown("""
- Comparing the spike times after the parameter conversion, we find that after the first initial time steps, the spike times start diverging, even though certain structural similarities remain. <br>
- This, however, is expected: Since the systems is in a chaotic state, slight differences in the variables lead to a completely different output after some time steps. This is generally the behavior in spiking neural network.<br>
- **But** the network stays in a *very similar dynamical state* with *similar activity*, as can be seen when examining the overall behavior of the rate as well as auto-covariance function.
-""")
-
-
-window = np.ones(window_size)
-binned_sps_critical_fixed = np.asarray([
-    np.convolve(spks_critical_fixed[i], window) for i in range(dim)])[:,:-window_size +1]
-lags, ac_fct_lif_critical_fixed = auto_cov_fct(acts=binned_sps_critical_fixed.T)
-
-
-
-
-offset = 50
-timesteps = np.arange(0,1000, 1)[offset: -offset]
-
-f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5))
-ax1.set_title('Mean rate of floating-point LIF network')
-ax1.plot(timesteps,
-         (binned_sps_critical - np.mean(binned_sps_critical, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
-ax1.set_ylabel('Mean rate')
-ax1.set_xlabel('Time Step')
-ax2.set_title('Mean rate of fixed-point LIF network')
-ax2.plot(timesteps,
-         (binned_sps_critical_fixed
-          - np.mean(binned_sps_critical_fixed, axis=1)[:, np.newaxis]).T.mean(axis=1)[offset: -offset])
-ax2.set_xlabel('Time Step')
-st.pyplot(f)
-
-
-
-# Plotting the auto-correlation function.
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Lag')
-plt.ylabel('Covariance')
-plt.plot(lags, ac_fct_lif_critical_fixed, label='Bit accurate model')
-plt.plot(lags, ac_fct_lif_critical, label='Floating point model')
-plt.legend()
-st.pyplot(fig)
-
-
-st.markdown("""
-How to learn more?
-
-Follow the links below for deep-dive tutorials on the concepts in this tutorial:
- - [Processes](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial02_processes.ipynb "Tutorial on Processes")
- - [ProcessModel](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial03_process_models.ipynb "Tutorial on ProcessModels")
- - [Connections](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial05_connect_processes.ipynb "Tutorial on Connecting Processe")
- - [Execution](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial04_execution.ipynb "Tutorial on Executing Processes")
- - [SubProcessModels](https://github.com/russelljjarvis/lava/tutorials/in_depth/tutorial06_hierarchical_processes.ipynb) or [Hierarchical Processes](../in_depth/tutorial06_hierarchical_processes.ipynb)
- 
- If you want to find out more about Lava, have a look at the [Lava documentation](https://lava-nc.org/ "Lava Documentation") or dive into the [source code](https://github.com/lava-nc/lava/ "Lava Source Code").
- 
- To receive regular updates on the latest developments and releases of the Lava Software Framework please subscribe to the [INRC newsletter](http://eepurl.com/hJCyhb "INRC Newsletter").
-""")
+label="should we continue with the rest of the memory hungry app?")
+options = ["No","Yes"]
+decision = st.radio(label, options)    
+if decision == "Yes"
+    the_rest_of_the_app()
