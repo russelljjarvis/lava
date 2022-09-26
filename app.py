@@ -259,7 +259,7 @@ st.markdown("""Defining the parameters for the network
  Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
 """)
 
-@st.cache
+@st.cache(ttl=24*3600)
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     '''Generate connectivity drawn from a Gaussian distribution with mean 0
     and std of (2 * q_factor) ** 2  / dim.
@@ -335,12 +335,14 @@ st.markdown("""Visualizing the activity
 We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
 """)
 
-
-fig = plt.figure(figsize=(7,5))
-plt.xlabel('Time Step')
-plt.ylabel('State value')
-plt.plot(states_balanced[:, :50])
-st.pyplot(fig)
+@st.cache(ttl=24*3600)
+def cache_fig(states_balanced)->None:
+    fig = plt.figure(figsize=(7,5))
+    plt.xlabel('Time Step')
+    plt.ylabel('State value')
+    plt.plot(states_balanced[:, :50])
+    st.pyplot(fig)
+cache_fig(states_balanced)
 
 st.markdown("""
  We observe that after an initial period the network settles in a fixed point.<br>
@@ -359,7 +361,7 @@ Note that the auto-covariance function is not normalised!<br>
 Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
 """)
 
-@st.cache
+@st.cache(ttl=24*3600)
 def auto_cov_fct(acts, max_lag=100, offset=200):
     """Auto-correlation function of parallel spike trains.
     
@@ -399,8 +401,8 @@ def auto_cov_fct(acts, max_lag=100, offset=200):
 
 lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
-@st.cache
-def plot0(lags, ac_fct_balanced):->None
+@st.cache(ttl=24*3600)
+def plot0(lags, ac_fct_balanced)->None:
     # Plotting the auto-correlation function.
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Lag')
