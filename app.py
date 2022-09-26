@@ -152,7 +152,7 @@ Rate neurons We next turn to the different implementations of the E/I Network.
 We start with a rate network obeying the equation.
 """)
  
-st.latex(r'''$  \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}  $''')
+st.latex(r'''\tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}''')
 st.markdown("""
 The rate or state $r$ is a vector containing the excitatory and inhibitory populations.
 The non-linearity $\phi$ is chosen to be the error function. 
@@ -335,7 +335,7 @@ st.markdown("""Visualizing the activity
 We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
 """)
 
-@st.cache(ttl=24*3600,hash_funcs={matplotlib.figure.Figure: lambda _: None})
+@st.cache(hash_funcs={matplotlib.figure.Figure: lambda _: None})
 def cache_fig(states_balanced)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
