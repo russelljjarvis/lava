@@ -118,7 +118,7 @@ def display_intro():
     Technically, the abstract E/I network is implemented via a LavaProcess, the concrete behavior - Rate and LIF dynamics - is realized with different ProcessModels. \n
     General imports
     """)
-if intro:
+if intro==str("Yes"):
     display_intro()
     
 
@@ -171,7 +171,7 @@ def display_intro0():
     st.markdown("""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
     """)
 
-if intro:
+if intro==str("Yes"):
     display_intro0()
     
 
@@ -269,7 +269,7 @@ def display_intro1():
      Finally, we have to set the weights given the above constraints. To this end, we sample the weights randomly from a Gaussian distribution with zero-mean and a standard deviation that scales with the ```q_factor```.
     """)
 
-if intro:
+if intro==str("Yes"):
     display_intro1()
     
 
@@ -375,8 +375,7 @@ def display_intro2():
     Note that the auto-covariance function is not normalised!<br>
     Due to this, we may derive further information about the network state: If $c(0)$ is small (in our case $<< 1$), the network activity is not rich and does not exhibit a large temporal variety across neurons. Thus the networks is unable to perform meaningful computations.
     """)
-
-if intro:
+if intro==str("Yes"):
     display_intro2()
     
 @st.cache(ttl=24*3600)
