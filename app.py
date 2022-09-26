@@ -638,7 +638,7 @@ class CustomRunConfigFloat(Loihi1SimCfg):
         else:
             return super().select(proc, proc_models)
 #@st.cache(ttl=24*3600)
-@st.cache(suppress_st_warning=True)
+#@st.cache(suppress_st_warning=True)
 
 def third_model_to_cache():
     rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
