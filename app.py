@@ -43,8 +43,9 @@ num_steps = 1000
 
 # Define dimensionality of the network.
 label = "select network size"
-options = [100,150,200,250]
-dim = st.selectbox(label, options)
+#options = [100,150,200,250]
+dim = 100
+#dim = st.selectbox(label, options)
 
 shape = (dim,)
 
@@ -149,25 +150,28 @@ class EINetwork(AbstractProcess):
         self.outport = OutPort(shape=(full_shape,))
 
 
-# #### ProcessModels for Python execution
+st.markdown(""" ProcessModels for Python execution""")
 
 
 st.markdown("""
 Rate neurons We next turn to the different implementations of the E/I Network.
- We start with a rate network obeying the equation""")
+ We start with a rate network obeying the equation.
+""")
  
     
- st.latex(\begin{equation} \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}} \end{equation})
- st.markdown("""
- The rate or state $r$ is a vector containing the excitatory and inhibitory populations. \n
- The non-linearity $\phi$ is chosen to be the error function. 
- The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
-  and an external bias ($I_{\mathrm{bias}})$. \n
-  We discretize the equation as follows:""")
-  st.latex(\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation})
-  st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these \n 
-              subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
-  """)
+st.latex(r'''$  \tau\dot{r} =  -r + W \phi(r) + I_{\mathrm{bias}}  $''')
+st.markdown("""
+The rate or state $r$ is a vector containing the excitatory and inhibitory populations.
+The non-linearity $\phi$ is chosen to be the error function. 
+The dynamics consists of a dampening part ($-r$), a part modelling the recurrent connectivity ($ W \phi(r)$)
+and an external bias ($I_{\mathrm{bias}})$. 
+We discretize the equation as follows:
+""")
+st.latex(r'''\begin{equation}  r(i + 1) = (1 - dr) \odot r(i) + W \phi(r(i)) \odot dr + I_{\mathrm{bias}} \odot dr  end{equation}''')
+
+st.markdown(""Potentially different time scales in the neuron dynamics of excitatory and inhibitory neurons as well as different bias currents for these 
+          subpopulations are encoded in the vectors $dr$ and $I_{\mathrm{bias}}$. We use the error function as non-linearity $\phi$.
+""")
 
 
 
