@@ -514,7 +514,6 @@ With the implementation below, we may either pass LIF specific parameters direct
 @implements(proc=EINetwork, protocol=LoihiProtocol)
 @tag('lif_neurons')
 class SubEINetworkModel(AbstractSubProcessModel):
-    @st.cache
     def __init__(self, proc):
         
         convert = proc.proc_params.get('convert', False)
@@ -623,30 +622,33 @@ class CustomRunConfigFloat(Loihi1SimCfg):
             return PyDenseModelFloat
         else:
             return super().select(proc, proc_models)
-        
-rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
+@st.cache(ttl=24*3600)
+def model_to_cache():
+    rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
 
-# Instantiating network and IO processes.
-lif_network_balanced = EINetwork( **network_params_balanced, convert=True)
-outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
+    # Instantiating network and IO processes.
+    lif_network_balanced = EINetwork( **network_params_balanced, convert=True)
+    outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
 
-# Instantiate Monitors to record the voltage and the current of the LIF neurons.
-monitor_v = Monitor()
-monitor_u = Monitor()
+    # Instantiate Monitors to record the voltage and the current of the LIF neurons.
+    monitor_v = Monitor()
+    monitor_u = Monitor()
 
-lif_network_balanced.outport.connect(outport_plug.a_in)
-monitor_v.probe(target=lif_network_balanced.state,  num_steps=num_steps)
-monitor_u.probe(target=lif_network_balanced.state_alt,  num_steps=num_steps)
+    lif_network_balanced.outport.connect(outport_plug.a_in)
+    monitor_v.probe(target=lif_network_balanced.state,  num_steps=num_steps)
+    monitor_u.probe(target=lif_network_balanced.state_alt,  num_steps=num_steps)
 
-lif_network_balanced.run(condition=run_cond, run_cfg=rcfg)
+    lif_network_balanced.run(condition=run_cond, run_cfg=rcfg)
 
-# Fetching spiking activity.
-spks_balanced = outport_plug.data.get()
-data_v_balanced = monitor_v.get_data()[lif_network_balanced.name][lif_network_balanced.state.name]
-data_u_balanced = monitor_u.get_data()[lif_network_balanced.name][lif_network_balanced.state_alt.name]
+    # Fetching spiking activity.
+    spks_balanced = outport_plug.data.get()
+    data_v_balanced = monitor_v.get_data()[lif_network_balanced.name][lif_network_balanced.state.name]
+    data_u_balanced = monitor_u.get_data()[lif_network_balanced.name][lif_network_balanced.state_alt.name]
 
-lif_network_balanced.stop()
+    lif_network_balanced.stop()
+    return data_v_balanced,data_u_balanced,spks_balanced
 
+data_v_balanced,data_v_balanced,data_u_balanced=model_to_cache()
 
 st.markdown("""Visualizing the activity
 First, we visually inspect to spiking activity of the neurons in the network.<br>
@@ -760,7 +762,7 @@ def the_rest_of_the_app():
     st.markdown("""Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
     Next, we turn to the auto-covariance function.
     """)
-    @st.cache
+    #@st.cache
     def plot4(binned_sps_balanced):
         lags, ac_fct = auto_cov_fct(acts=binned_sps_balanced.T)
 
@@ -854,8 +856,8 @@ def the_rest_of_the_app():
     Next we compare the auto-covariance functions:
     """)
 
-    @st.cache
-    def fig6(lags, ac_fct_lif_critical,ac_fct_critical):
+    #@st.cache
+    def fig6(lags, ac_fct_lif_critical,ac_fct_critical)->None:
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
         ax1.plot(lags, ac_fct_lif_critical)
         ax1.set_title('Auto-Cov function: LIF network')
@@ -867,7 +869,9 @@ def the_rest_of_the_app():
         ax2.set_ylabel('Covariance')
         plt.tight_layout()
         st.pyplot(f)
-
+    
+    fig6(lags, ac_fct_lif_critical,ac_fct_critical)
+    
     st.markdown("""
      We observe in the auto-covariance function of the LIF network a slowly decay, akin to the rate network. <br>
      Even though both auto-covariance functions are not identical, they qualitatively match in that both networks exhibit long-lasting temporal correlations and an activity at the edge of chaos. <br>
@@ -1247,7 +1251,7 @@ def the_rest_of_the_app():
     spks_critical_fixed = do_run_0()
 
 
-    @st.cache(ttl=24*3600)
+    #@st.cache(ttl=24*3600)
     def plot_5(spks_critical_fixed)->None:
         fig = raster_plot(spks=spks_critical, color='orange', alpha=0.3)
         raster_plot(spks=spks_critical_fixed, fig=fig, alpha=0.3, color='b')
