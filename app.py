@@ -634,6 +634,7 @@ def compute_ISI_CV(ISI_array):
 def average(ISI_CV):
     # use numpy to mean the vector of ISI_CVs
     # return a scalar.
+    pass
 
     
     
@@ -675,31 +676,29 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     return fig       
 
 
-# In[ ]:
 
 
 fig = raster_plot(spks=spks_balanced)
 st.pyplot(fig)
 
-# After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
-# Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
-# This network state resembles qualitatively the fixed point observed above for the rate network. <br>
-# Before we turn to the study of the auto-covariance we need to address a subtlety in the comparison of spiking and rate network. <br>
-# Comparing spike trains and rates directly is difficult due dynamics of single spiking neurons: Most of the time, a neuron does not spike! <br>
-# To overcome this problem and meaningfully compare quantities like the auto-covariance function, we follow the usual approach and bin the spikes. This means, we apply a sliding box-car window of a given length and count at each time step the spikes in that window to obtain an estimate of the rate. <br>
+#spike_frame = [{k,v for k,v in spks_balanced}]
+#st.dataframe(spike_frame)
 
-# In[ ]:
-
+st.markdown(""" After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
+ Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
+ This network state resembles qualitatively the fixed point observed above for the rate network. <br>
+ Before we turn to the study of the auto-covariance we need to address a subtlety in the comparison of spiking and rate network. <br>
+ Comparing spike trains and rates directly is difficult due dynamics of single spiking neurons: Most of the time, a neuron does not spike! <br>
+ To overcome this problem and meaningfully compare quantities like the auto-covariance function, we follow the usual approach and bin the spikes. This means, we apply a sliding box-car window of a given length and count at each time step the spikes in that window to obtain an estimate of the rate. <br>
+""")
 
 window_size = 25
 window = np.ones(window_size) # Window size of 25 time steps for binning.
 binned_sps_balanced = np.asarray([np.convolve(spks_balanced[i], window) for i in range(dim)])[:, :-window_size + 1]
 
+st.markdown(""" After having an estimate of the rate, we compare the temporally-averaged mean rate of both networks in the first state.<br>
+ To avoid boundary effects of the binning, we disregard time steps at the beginning and the end.""")
 
-# After having an estimate of the rate, we compare the temporally-averaged mean rate of both networks in the first state.<br>
-# To avoid boundary effects of the binning, we disregard time steps at the beginning and the end.
-
-# In[ ]:
 
 
 offset = 50
