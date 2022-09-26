@@ -279,7 +279,7 @@ if intro==str("Yes"):
     display_intro1()
     
 
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     '''Generate connectivity drawn from a Gaussian distribution with mean 0
     and std of (2 * q_factor) ** 2  / dim.
@@ -327,7 +327,7 @@ def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
     return weights
 
 #@st.cache(ttl=24*3600)
-@st.cache(suppress_st_warning=True)
+#@st.cache(suppress_st_warning=True)
 def first_model_to_cache():
     # Generate weights and store them in parameter dictionary.
     network_params_balanced['weights'] = generate_gaussian_weights(dim,
