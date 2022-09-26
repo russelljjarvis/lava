@@ -409,6 +409,7 @@ def plot0(lags, ac_fct_balanced)->None:
     plt.ylabel('Covariance')
     plt.plot(lags, ac_fct_balanced)
     st.pyplot(fig)
+plot0(lags, ac_fct_balanced)
 
 st.markdown("""
 As expected, there is covariance has its maximum at a time lag of $0$. <br>
@@ -450,14 +451,14 @@ network_critical.run(run_cfg=rcfg, condition=run_cond)
 states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
 network_critical.stop()
 
-@st.cache
-def plot1(states_critical):
+@st.cache(ttl=24*3600)
+def plot1(states_critical)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
     plt.ylabel('State value')
     plt.plot(states_critical[:, :50])
-    st.pyplot(fig)#plt.show()
-
+    st.pyplot(fig)
+plot1(states_critical)
 
 st.markdown("""
 We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
@@ -467,15 +468,15 @@ We find that after increasing the `q_factor`, the network shows a very different
 
 lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
 
-@st.cache
-def plot2(lags, ac_fct_critical):
+@st.cache(ttl=24*3600)
+def plot2(lags, ac_fct_critical)->None:
     # Plotting the auto-correlation function.
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Lag')
     plt.ylabel('Correlation')
     plt.plot(lags, ac_fct_critical)
     st.pyplot(fig)
-
+plot2(lags, ac_fct_critical)
 
 st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
 This means that the network has memory of its previous states: The state at a given point in time influences strongly the subsequent path of the trajectories of the neurons. <br>
@@ -690,12 +691,12 @@ def raster_plot(spks, stride=6, fig=None, color='b', alpha=1):
     return fig       
 
 
-@st.cache
-def plot3(spks_balanced):
+@st.cache(ttl=24*3600)
+def plot3(spks_balanced)->None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
 
-plot3(spks_balanced)
+_=plot3(spks_balanced)
     
     
 st.markdown(type(spks_balanced))
@@ -916,7 +917,6 @@ def the_rest_of_the_app():
 
     # First, we look at the distribution of activation of a random neuron in both network states.
 
-    # In[ ]:
 
 
     rnd_neuron = 4
@@ -1003,7 +1003,7 @@ def the_rest_of_the_app():
      Next, we turn to bit-accurate implementations of the LIF and Dense process where only a fixed precision for the numerical values is allowed. Here, the parameters need to be mapped to retain the dynamical behavior of the network. <br>
      First, we define a method for mapping the parameters. It consists of finding an optimal scaling function that consistently maps all appearing floating-point numbers to fixed-point numbers.
     """)
-    @st.cache
+    @st.cache(ttl=24*3600)
     def _scaling_funct(params):
         '''Find optimal scaling function for float- to fixed-point mapping.
 
@@ -1106,7 +1106,7 @@ def the_rest_of_the_app():
 
         return lif_params_fixed
 
-    @st.cache
+    @st.cache(ttl=24*3600)
     def scaling_funct_dudv(val):
         '''Scaling function for du, dv in LIF
         ''' 
@@ -1208,7 +1208,7 @@ def the_rest_of_the_app():
             else:
                 return super().select(proc, proc_models)
 
-    @st.cache        
+    @st.cache(ttl=24*3600)       
     def do_run_0():
         rcfg = CustomRunConfigFixed(select_tag='lif_neurons', select_sub_proc_model=True)
 
@@ -1228,7 +1228,7 @@ def the_rest_of_the_app():
     spks_critical_fixed = do_run_0()
 
 
-    @st.cache
+    @st.cache(ttl=24*3600)
     def plot_5(spks_critical_fixed)->None:
         fig = raster_plot(spks=spks_critical, color='orange', alpha=0.3)
         raster_plot(spks=spks_critical_fixed, fig=fig, alpha=0.3, color='b')
