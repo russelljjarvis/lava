@@ -476,10 +476,9 @@ def plot1(states_critical)->None:
     plt.ylabel('State value')
     plt.plot(states_critical[:, :50])
     st.pyplot(fig)
+    
 plot1(states_critical)
 if intro==str("Yes"):
-
-
     st.markdown("""
     We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
      The single neuron trajectories behave unpredictably and fluctuate widely, a small perturbation would lead to completely different state.
@@ -724,11 +723,11 @@ _=plot3(spks_balanced)
     
 st.markdown(type(spks_balanced))
 st.markdown(spks_balanced)
+spike_frame = [{k,v for k,v in spks_balanced}]
+st.dataframe(spike_frame)
 
 def the_rest_of_the_app():
-    #spike_frame = [{k,v for k,v in spks_balanced}]
-    #st.dataframe(spike_frame)
-
+    
     st.markdown(""" After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
      Overall, we see a heterogeneous network state with asynchronous as well as synchronous spiking across neurons. <br>
      This network state resembles qualitatively the fixed point observed above for the rate network. <br>
