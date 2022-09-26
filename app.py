@@ -335,7 +335,7 @@ st.markdown("""Visualizing the activity
 We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
 """)
 
-@st.cache(hash_funcs={matplotlib.figure.Figure: lambda _: None})
+#@st.cache(hash_funcs={matplotlib.figure.Figure: lambda _: None})
 def cache_fig(states_balanced)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
