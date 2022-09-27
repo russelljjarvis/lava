@@ -733,7 +733,7 @@ def compute_ISI(spks):
     pass
     # return an array of ISI_arrays.
     
-compute_ISI(spks_balanced)
+st.markdown(compute_ISI(spks_balanced))
 
 def compute_ISI_CV(ISI_array):
     # hint
