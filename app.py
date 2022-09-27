@@ -743,6 +743,7 @@ def spikes_2_frame(dims,spks)->None:
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
     timesteps = num_time_steps = spks.shape[1]
     stride = 6
+    time_steps = np.arange(0, num_time_steps, 1)
 
 
     assert stride < num_time_steps, "Stride must be smaller than number of time steps"
