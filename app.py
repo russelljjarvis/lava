@@ -735,7 +735,7 @@ def plot3(spks_balanced)->None:
     st.pyplot(fig)
 
 _=plot3(spks_balanced)
-    
+import pandas as pd    
 def spikes_2_frame(spks_balanced)->None:    
     st.markdown(type(spks_balanced))
     st.markdown(spks_balanced)
@@ -745,10 +745,7 @@ def spikes_2_frame(spks_balanced)->None:
     st.dataframe(spike_frame)
     #st.markdown(spike_frame.values)
     
-try:
-    spikes_2_frame(spks_balanced)
-except:
-    pass
+spikes_2_frame(spks_balanced)
 def the_rest_of_the_app():
     
     st.markdown(""" After an initial synchronous burst (all neurons are simultaneously driven to the threshold by the external current), we observe an immediate decoupling of the single neuron activities due to the recurrent connectivity.<br>
