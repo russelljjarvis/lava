@@ -741,11 +741,14 @@ def spikes_2_frame(spks_balanced)->None:
     st.markdown(spks_balanced)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks_balanced)}
     spike_frame = pd.DataFrame([{ind:nparray for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}])
+    spike_frame.dropzeros()
+    spike_frame.loc[~spike_frame==0).all(axis=1)]
+
     st.write(spike_frame)
 
-    spike_frame = pd.DataFrame([{ind:pd.Series(nparray) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}])
-    st.markdown(spike_frame)
+    spike_frame = pd.DataFrame([{str(ind):pd.Series(nparray) for (ind,nparray) in enumerate(spks_balanced) for spikes in nparray}])
     st.write(spike_frame)
+    #st.write(spike_frame)
     #st.markdown(spike_frame.values)
     
 spikes_2_frame(spks_balanced)
