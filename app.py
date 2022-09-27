@@ -723,13 +723,15 @@ _=plot3(spks_balanced)
 def compute_ISI(spks):
     # hint spks is a 2D matrix, get a 1D Vector per neuron-id spike train.
     # [x for ind,x in enumerate(spks)]
-    
-    st.markdown(spks)
+    spkList = [x for ind,x in enumerate(spks)]
+    #timeDiff = [j-i for i, j in zip(spkList[:-1], spkList[1:])]
+    #return np.asarray(ISI)
+    st.markdown(spkList)
     # st.pyplot()
     pass
     # return an array of ISI_arrays.
     
-compute_ISI(spks)
+compute_ISI(spks_balanced)
 
 def compute_ISI_CV(ISI_array):
     # hint
