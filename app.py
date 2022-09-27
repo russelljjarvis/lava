@@ -671,22 +671,6 @@ First, we visually inspect to spiking activity of the neurons in the network.<br
 To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
 """)
 
-def compute_ISI(spks):
-    # hint spks is a 2D matrix, get a 1D Vector per neuron-id spike train.
-    # [x for ind,x in enumerate(spks)]
-    pass
-    # return an array of ISI_arrays.
-
-def compute_ISI_CV(ISI_array):
-    # hint
-    # [x for ind,x in enumerate(spks)]
-    pass
-    # return a vector of scalars: ISI_CV
-
-def average(ISI_CV):
-    # use numpy to mean the vector of ISI_CVs
-    # return a scalar.
-    pass
 
     
     
@@ -735,22 +719,34 @@ def plot3(spks_balanced)->None:
 
 _=plot3(spks_balanced)
 
+def compute_ISI(spks):
+    # hint spks is a 2D matrix, get a 1D Vector per neuron-id spike train.
+    # [x for ind,x in enumerate(spks)]
+    pass
+    # return an array of ISI_arrays.
+
+def compute_ISI_CV(ISI_array):
+    # hint
+    # [x for ind,x in enumerate(spks)]
+    pass
+    # return a vector of scalars: ISI_CV
+
+def average(ISI_CV):
+    # use numpy to mean the vector of ISI_CVs
+    # return a scalar.
+    pass
 
 import pandas as pd    
 def spikes_2_frame(dims,spks,num_time_steps)->None:    
     st.markdown(type(spks))
     st.markdown(spks)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
-    num_time_steps = spks.shape[1]
+    timesteps = num_time_steps = spks.shape[1]
     stride = 6
-    timesteps = spks.shape[1]
 
 
     assert stride < num_time_steps, "Stride must be smaller than number of time steps"
-    
-
-    timesteps = spks.shape[1]
-    
+       
     spk_time_list = []
     for i in range(0, dim, stride):
         spike_times = {i:pd.Series(time_steps[spks[i] == 1])}
