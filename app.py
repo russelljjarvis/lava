@@ -752,7 +752,7 @@ def spikes_to_frame(dims,spks)->None:
     spike_times_dic = {}
     for i in range(0, dim, stride):
         temp = [float(i) for i in time_steps[spks[i] == 1]]
-        spike_times[i] = pd.Series(temp)
+        spike_times_dic[i] = pd.Series(temp)
         
     spk_time_list.append(spike_times_dic)
 
