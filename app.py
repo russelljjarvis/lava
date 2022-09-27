@@ -737,12 +737,14 @@ _=plot3(spks_balanced)
 
 
 import pandas as pd    
-def spikes_2_frame(dims,spks)->None:    
+def spikes_2_frame(dims,spks,num_time_steps)->None:    
     st.markdown(type(spks))
     st.markdown(spks)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
     num_time_steps = spks.shape[1]
     stride = 6
+    #num_time_steps = spks.shape[1]
+
     assert stride < num_time_steps, "Stride must be smaller than number of time steps"
     
 
