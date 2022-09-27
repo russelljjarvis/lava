@@ -8,6 +8,7 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.model import AbstractProcessModel
 
+import pandas as pd    
 
 # Import parent classes for ProcessModels for Hierarchical Processes.
 from lava.magma.core.model.py.model import PyLoihiProcessModel
@@ -736,8 +737,7 @@ def average(ISI_CV):
     # return a scalar.
     pass
 
-import pandas as pd    
-def spikes_2_frame(dims,spks,num_time_steps)->None:    
+def spikes_2_frame(dims,spks)->None:    
     st.markdown(type(spks))
     st.markdown(spks)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
