@@ -737,7 +737,7 @@ def average(ISI_CV):
     # return a scalar.
     pass
 
-def spikes_2_frame(dims,spks)->None:    
+def spikes_to_frame(dims,spks)->None:    
     st.markdown(type(spks))
     st.markdown(spks)
     #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
@@ -749,17 +749,20 @@ def spikes_2_frame(dims,spks)->None:
     assert stride < num_time_steps, "Stride must be smaller than number of time steps"
        
     spk_time_list = []
+    spike_times_dic = {}
     for i in range(0, dim, stride):
-        spike_times = {i:pd.Series(time_steps[spks[i] == 1])}
-        spk_time_list.append(spike_times)
+        temp = [float(i) for i in time_steps[spks[i] == 1]]
+        spike_times[i] = pd.Series(temp)
+        
+    spk_time_list.append(spike_times_dic)
 
     spike_frame = pd.DataFrame(spk_time_list)
     st.write(spike_frame)
 
-    st.write(spike_frame)
+    #st.write(spike_frame)
     return spike_frame
     
-spike_frame = spikes_2_frame(dim,spks_balanced)
+spike_frame = spikes_to_frame(dim,spks_balanced)
 
 def the_rest_of_the_app():
     
