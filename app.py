@@ -143,7 +143,7 @@ def spikes_to_frame(dims, spks) -> None:
     spk_time_list = []
     spike_times_dic = {}
     for i in range(0, dim, stride):
-        temp = float(x) for x in time_steps[spks[i] == 1]
+        temp = [float(x) for x in time_steps[spks[i] == 1]]
         spike_times_dic[str(i)] = temp
     # st.markdown(spike_times_dic["0"])
     spk_time_list.append(spike_times_dic)
