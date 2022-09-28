@@ -49,8 +49,8 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 # Configurations for execution.
-num_steps = 1000/2
-dim = 100/2
+num_steps = 500
+dim = 50
 
 
 # Define dimensionality of the network.
