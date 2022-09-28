@@ -155,7 +155,8 @@ def plot3(spks_balanced) -> None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
 
-
+results_dic = {}
+"""
 uploaded_file = st.file_uploader("Upload Spike Trains To Compute CV on.")
 if uploaded_file is not None:
     spks_dict_of_dicts = pickle.loads(uploaded_file.read())
@@ -168,8 +169,8 @@ if uploaded_file is not None:
 
     flatten_run_params = [
         (dim, num_steps)
-        for dim in [100, 200]
-        for num_steps in [1000, 2000]
+        for dim in [75, 200]
+        for num_steps in [500, 2000]
     ]
 
     my_bar = st.progress(0)
@@ -186,72 +187,72 @@ if uploaded_file is not None:
         for spkt in [critical_spikes, critical_fixed_spikes]:
             result = compute_ISI_CV(spkt)
             st.markdown(result)
+"""
+#else:
 
-else:
+st.markdown(
+    "No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link."
+)
 
-    st.markdown(
-        "No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link."
+
+flatten_run_params = [
+    (dim, num_steps)
+    for dim in [75, 200]
+    for num_steps in [500, 2000]
+]
+results_dic = {}
+my_bar = st.progress(0)
+
+for ind, (neuron_population_size, length_of_simulation) in enumerate(
+    flatten_run_params
+):
+
+    num_steps = length_of_simulation
+    dim = neuron_population_size
+    network_params_balanced, network_params_critical = get_params(dim)
+
+    percent_complete = float(ind/4.0)
+    my_bar.progress(percent_complete + 1)
+    """
+    (
+        data_v_balanced,
+        data_v_balanced,
+        spks_balanced,
+    ) = third_model_to_cache(
+        network_params_balanced, num_steps, dim
+    )
+    #spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
+    #_ = plot3(spks_balanced)
+    #"balanced": spike_times_balanced,
+    """
+    (
+        spks_critical,
+        data_u_critical,
+        data_v_critical,
+        lif_network_critical,
+    ) = fourth_model(network_params_critical, num_steps, dim)
+
+    spks_critical_fixed = fifth_model_to_cache(
+        num_steps,
+        data_u_critical,
+        data_v_critical,
+        network_params_critical,
     )
 
-
-    flatten_run_params = [
-        (dim, num_steps)
-        for dim in [100, 200]
-        for num_steps in [1000, 2000]
-    ]
-    results_dic = {}
-    my_bar = st.progress(0)
-
-    for ind, (neuron_population_size, length_of_simulation) in enumerate(
-        flatten_run_params
-    ):
-
-        num_steps = length_of_simulation
-        dim = neuron_population_size
-        network_params_balanced, network_params_critical = get_params(dim)
-
-        percent_complete = float(ind/4.0)
-        my_bar.progress(percent_complete + 1)
-        """
-        (
-            data_v_balanced,
-            data_v_balanced,
-            spks_balanced,
-        ) = third_model_to_cache(
-            network_params_balanced, num_steps, dim
-        )
-        #spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
-        #_ = plot3(spks_balanced)
-        #"balanced": spike_times_balanced,
-        """
-        (
-            spks_critical,
-            data_u_critical,
-            data_v_critical,
-            lif_network_critical,
-        ) = fourth_model(network_params_critical, num_steps, dim)
-
-        spks_critical_fixed = fifth_model_to_cache(
-            num_steps,
-            data_u_critical,
-            data_v_critical,
-            network_params_critical,
-        )
-
-        spike_frame1, spike_times_critical = spikes_to_frame(dim, spks_critical)
-        _ = plot3(spks_critical)
-        spike_frame2, spike_times_critical_fixed = spikes_to_frame(
-            dim, spks_critical_fixed
-        )
-        _ = plot3(spks_critical_fixed)
-        results_dic[neuron_population_size, length_of_simulation] = {
-            
-            "critical": spike_times_critical,
-            "critical_fixed": spike_times_critical_fixed,
-        }
-
-    st.download_button(
-        "Download Spikes",
-        data=pickle.dumps(results_dic),
-        file_name="spks_balanced.pkl",
+    spike_frame1, spike_times_critical = spikes_to_frame(dim, spks_critical)
+    _ = plot3(spks_critical)
+    spike_frame2, spike_times_critical_fixed = spikes_to_frame(
+        dim, spks_critical_fixed
     )
+    _ = plot3(spks_critical_fixed)
+    results_dic[neuron_population_size, length_of_simulation] = {
+        
+        "critical": spike_times_critical,
+        "critical_fixed": spike_times_critical_fixed,
+    }
+
+st.download_button(
+    "Download Spikes",
+    data=pickle.dumps(results_dic),
+    file_name="spks_balanced.pkl",
+)
