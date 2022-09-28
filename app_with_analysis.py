@@ -1488,55 +1488,6 @@ else:
             return scaling_funct
 
         # @st.cache
-        def float2fixed_lif_parameter(lif_params):
-            """Float- to fixed-point mapping for LIF parameters.
-
-            Parameters
-            ---------
-            lif_params : dict
-                Dictionary with parameters for LIF network with floating-point ProcModel
-
-            Returns
-            ------
-            lif_params_fixed : dict
-                Dictionary with parameters for LIF network with fixed-point ProcModel
-            """
-
-            scaling_funct = _scaling_funct(params)
-
-            bias_mant_bits = params["bias"]["bits"]
-            scaled_bias = scaling_funct(params["bias"]["val"])[0]
-            bias_exp = int(np.ceil(np.log2(scaled_bias) - bias_mant_bits + 1))
-            if bias_exp <= 0:
-                bias_exp = 0
-
-            weight_mant_bits = params["weights"]["bits"]
-            scaled_weights = np.round(scaling_funct(params["weights"]["val"]))
-            weight_exp = int(
-                np.ceil(np.log2(scaled_bias) - weight_mant_bits + 1)
-            )
-            weight_exp = np.max(weight_exp) - 6
-            if weight_exp <= 0:
-                diff = weight_exp
-                weight_exp = 0
-
-            bias_mant = int(scaled_bias // 2 ** bias_exp)
-            weights = scaled_weights.astype(np.int32)
-
-            lif_params_fixed = {
-                "vth": int(
-                    scaling_funct(params["vth"]["val"])
-                    // 2 ** params["vth"]["shift"][0]
-                ),
-                "bias_mant": bias_mant,
-                "bias_exp": bias_exp,
-                "weights": np.round(
-                    scaled_weights / (2 ** params["weights"]["shift"][0])
-                ).astype(np.int32),
-                "weight_exp": weight_exp,
-            }
-
-            return lif_params_fixed
 
         # @st.cache(ttl=24*3600)
         def scaling_funct_dudv(val):

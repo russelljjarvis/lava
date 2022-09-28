@@ -1,4 +1,3 @@
-import time
 
 # Import Process level primitives.
 from lava.magma.core.process.process import AbstractProcess
@@ -37,8 +36,6 @@ from lava.proc.dense.models import PyDenseModelBitAcc
 from lava.proc.lif.models import PyLifModelBitAcc
 
 
-from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
 
 # Import io processes.
 from lava.proc import io
@@ -165,6 +162,80 @@ class RateEINetworkModel(PyLoihiProcessModel):
         a_in = self.inport.recv()
         self.state = self.state_update(self.state) + a_in
         self.outport.send(self.state)
+
+
+def _scaling_funct(params):
+    """Find optimal scaling function for float- to fixed-point mapping.
+
+    Parameter
+    ---------
+    params : dict
+        Dictionary containing information required for float- to fixed-point mapping
+
+    Returns
+    ------
+    scaling_funct : callable
+        Optimal scaling function for float- to fixed-point conversion
+    """
+    sorted_params = dict(
+        sorted(
+            params.items(),
+            key=lambda x: np.max(np.abs(x[1]["val"])),
+            reverse=True,
+        )
+    )
+
+    # Initialize scaling function.
+    scaling_funct = None
+
+    for key, val in sorted_params.items():
+        if val["signed"] == "s":
+            signed_shift = 1
+        else:
+            signed_shift = 0
+
+        if np.max(val["val"]) == np.max(np.abs(val["val"])):
+            max_abs = True
+            max_abs_val = np.max(val["val"])
+        else:
+            max_abs = False
+            max_abs_val = np.max(np.abs(val["val"]))
+
+        if max_abs:
+            rep_val = 2 ** (val["bits"] - signed_shift) - 1
+        else:
+            rep_val = 2 ** (val["bits"] - signed_shift)
+
+        max_shift = np.max(val["shift"])
+
+        max_rep_val = rep_val * 2 ** max_shift
+
+        if scaling_funct:
+            scaled_vals = scaling_funct(val["val"])
+
+            max_abs_scaled_vals = np.max(np.abs(scaled_vals))
+            if max_abs_scaled_vals <= max_rep_val:
+                continue
+            else:
+                p1 = max_rep_val
+                p2 = max_abs_val
+
+        else:
+            p1 = max_rep_val
+            p2 = max_abs_val
+
+        scaling_funct = lambda x: p1 / p2 * x
+
+    return scaling_funct
+
+
+def scaling_funct_dudv(val):
+    """Scaling function for du, dv in LIF
+    """
+    assert val < 1, "Passed value must be smaller than 1"
+
+    return np.round(val * 2 ** 12).astype(np.int32)
+
 
 
 def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
@@ -494,7 +565,7 @@ def fourth_model(network_params_critical, num_steps, dim):
         lif_network_critical,
     )
 
-def float2fixed_lif_parameter(lif_params):
+def float2fixed_lif_parameter(lif_params)->dict:
     """Float- to fixed-point mapping for LIF parameters.
 
     Parameters
