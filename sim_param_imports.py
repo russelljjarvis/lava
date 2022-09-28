@@ -46,6 +46,7 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 
+import numpy as np
 
 class EINetwork(AbstractProcess):
     """Network of recurrently connected neurons.

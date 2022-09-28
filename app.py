@@ -1,5 +1,4 @@
-import time
-
+"""
 # Import Process level primitives.
 from lava.magma.core.process.process import AbstractProcess
 from lava.magma.core.process.variable import Var
@@ -45,7 +44,8 @@ from lava.proc import io
 
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
-
+"""
+import time
 
 from matplotlib import pyplot as plt
 
