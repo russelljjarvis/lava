@@ -52,6 +52,8 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 
+from sim_param_imports *
+
 # Configurations for execution.
 
 
@@ -152,7 +154,6 @@ def plot3(spks_balanced) -> None:
 
 
 uploaded_file = st.file_uploader("Upload Spike Trains To Compute CV on.")
-
 if uploaded_file is not None:
     spks_dict_of_dicts = pickle.loads(uploaded_file.read())
     st.write("spikes loaded")
@@ -181,7 +182,7 @@ else:
     #from sim_param_imports import *
 
     st.markdown("No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link.")
-    from sim_param_imports *
+    
     network_params_balanced,network_params_critical = get_params(dim)
 
     flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in [500,1000,2000]]
