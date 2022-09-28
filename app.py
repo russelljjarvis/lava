@@ -174,7 +174,7 @@ else:
     st.markdown("No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link.")
     import sim_param_imports
 
-    flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in 500,1000,2000]
+    flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in [500,1000,2000]]
     results_dic = {}
     my_bar = st.progress(0)
 
