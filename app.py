@@ -678,6 +678,34 @@ start = time.time()
 stop = time.time()
 sim_m3 = stop-start
 st.markdown("simulating model 3 took: {0} seconds".format(sim_m3))
+
+
+def spikes_to_frame(dims,spks)->None:    
+    st.markdown(type(spks))
+    st.markdown(spks)
+    #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
+    timesteps = num_time_steps = spks.shape[1]
+    stride = 6
+    time_steps = np.arange(0, num_time_steps, 1)
+
+
+    assert stride < num_time_steps, "Stride must be smaller than number of time steps"
+       
+    spk_time_list = []
+    spike_times_dic = {}
+    for i in range(0, dim, stride):
+        temp = [float(x) for x in time_steps[spks[i] == 1]]
+        spike_times_dic[str(i)] = temp
+    st.markdown(spike_times_dic["0"])    
+    spk_time_list.append(spike_times_dic)
+    spike_frame = pd.DataFrame(spk_time_list)
+    #st.write(spike_frame)
+    st.markdown(spike_frame.values)
+
+    return spike_frame
+    
+spike_frame = spikes_to_frame(dim,spks_balanced)
+
 if intro==str("Yes"):
     st.markdown("""Visualizing the activity
     First, we visually inspect to spiking activity of the neurons in the network.<br>
@@ -730,20 +758,27 @@ def plot3(spks_balanced)->None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
 
+
+import time
+start = time.time()
 _=plot3(spks_balanced)
+stop = time.time()
+plot_spikes = stop-start
+st.markdown("plotting spikes model 3 took: {0} seconds".format(plot_spikes))
 
 st.download_button(
     "Download Spikes",
-    data=pickle.dumps(spks_balanced),
+    data=pickle.dumps(spike_frame),
     file_name="spks_balanced.pkl",
 )
+"""
 uploaded_file = st.file_uploader("Upload Model")
 
 if uploaded_file is not None:
     spks_balanced = pickle.loads(uploaded_file.read())
     st.write("Model loaded")
     st.write(spks_balanced)
-
+"""
 def compute_ISI(spks):
     """
     Damien's code.
@@ -773,31 +808,6 @@ def average(ISI_CV):
     # return a scalar.
     pass
 
-def spikes_to_frame(dims,spks)->None:    
-    st.markdown(type(spks))
-    st.markdown(spks)
-    #spike_dict_empty = {ind:[] for (ind,nparray) in enumerate(spks)}
-    timesteps = num_time_steps = spks.shape[1]
-    stride = 6
-    time_steps = np.arange(0, num_time_steps, 1)
-
-
-    assert stride < num_time_steps, "Stride must be smaller than number of time steps"
-       
-    spk_time_list = []
-    spike_times_dic = {}
-    for i in range(0, dim, stride):
-        temp = [float(x) for x in time_steps[spks[i] == 1]]
-        spike_times_dic[str(i)] = temp
-    st.markdown(spike_times_dic["0"])    
-    spk_time_list.append(spike_times_dic)
-    spike_frame = pd.DataFrame(spk_time_list)
-    #st.write(spike_frame)
-    st.markdown(spike_frame.values)
-
-    return spike_frame
-    
-spike_frame = spikes_to_frame(dim,spks_balanced)
 
 def the_rest_of_the_app():
     
