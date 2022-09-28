@@ -672,6 +672,7 @@ network_params_balanced['weights'] = generate_gaussian_weights(dim,
                                                                 network_params_balanced['g_factor'])
 
 (data_v_balanced,data_v_balanced,spks_balanced)=third_model_to_cache(network_params_balanced)
+
 if intro==str("Yes"):
     st.markdown("""Visualizing the activity
     First, we visually inspect to spiking activity of the neurons in the network.<br>
@@ -726,7 +727,24 @@ def plot3(spks_balanced)->None:
 
 _=plot3(spks_balanced)
 
+with open("spike_data.p","wb") as f:
+    st.download_button(
+        "Download Model",
+        data=pickle.dumps(spks_balanced),
+        file_name="spike_data.p",
+    )
+
+uploaded_file = st.file_uploader("Upload Model")
+
+if uploaded_file is not None:
+    spks_balanced = pickle.loads(uploaded_file.read())
+    st.write("Model loaded")
+    st.write(spks_balanced)
+
 def compute_ISI(spks):
+    """
+    Damien's code.
+    """
     # hint spks is a 2D matrix, get a 1D Vector per neuron-id spike train.
     # [x for ind,x in enumerate(spks)]
     #spkList = [x for ind,x in enumerate(spks)]
@@ -736,7 +754,7 @@ def compute_ISI(spks):
     return np.asarray(ISI)
     #st.markdown(spkList)
     # st.pyplot()
-    pass
+    #pass
     # return an array of ISI_arrays.
     
 st.markdown(compute_ISI(spks_balanced))
@@ -768,11 +786,11 @@ def spikes_to_frame(dims,spks)->None:
     for i in range(0, dim, stride):
         temp = [float(x) for x in time_steps[spks[i] == 1]]
         spike_times_dic[str(i)] = temp
-    st.markdown(spike_times_dic)    
+    st.markdown(spike_times_dic["0"])    
     spk_time_list.append(spike_times_dic)
-
     spike_frame = pd.DataFrame(spk_time_list)
     #st.write(spike_frame)
+    st.markdown(spike_frame.values)
 
     return spike_frame
     
