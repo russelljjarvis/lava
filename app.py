@@ -38,6 +38,15 @@ from convert_params import convert_rate_to_lif_params
 from lava.proc.dense.models import PyDenseModelBitAcc
 from lava.proc.lif.models import PyLifModelBitAcc
 
+
+
+from lava.magma.core.run_conditions import RunSteps
+from lava.magma.core.run_configs import Loihi1SimCfg
+# Import io processes.
+from lava.proc import io
+
+from lava.proc.dense.models import PyDenseModelFloat
+from lava.proc.lif.models import PyLifModelFloat
 # Configurations for execution.
 num_steps = 1000
 dim = 100
@@ -355,10 +364,10 @@ def first_model_to_cache():
     network_balanced.stop()
     return states_balanced
 
-states_balanced = first_model_to_cache()
-st.markdown("""Visualizing the activity
-We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
-""")
+#states_balanced = first_model_to_cache()
+#st.markdown("""Visualizing the activity
+#We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
+#""")
 
 #@st.cache(hash_funcs={matplotlib.figure.Figure: lambda _: None})
 def cache_fig(states_balanced)->None:
@@ -367,7 +376,7 @@ def cache_fig(states_balanced)->None:
     plt.ylabel('State value')
     plt.plot(states_balanced[:, :50])
     st.pyplot(fig)
-cache_fig(states_balanced)
+#cache_fig(states_balanced)
 
 def display_intro2():
     st.markdown("""
@@ -427,7 +436,7 @@ def auto_cov_fct(acts, max_lag=100, offset=200):
 
 
 
-lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
+#lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
 #@st.cache(ttl=24*3600)
 #@st.cache(suppress_st_warning=False, hash_funcs=True)
@@ -438,14 +447,16 @@ def plot0(lags, ac_fct_balanced)->None:
     plt.ylabel('Covariance')
     plt.plot(lags, ac_fct_balanced)
     st.pyplot(fig)
-plot0(lags, ac_fct_balanced)
+
+#plot0(lags, ac_fct_balanced)
+
 if intro==str("Yes"):
     st.markdown("""
     As expected, there is covariance has its maximum at a time lag of $0$. <br>
     Examining the covariance function, we first note its values are small ($<<1$) implying low dimensional dynamics of the network. <br>
     This fits our observation made above on the grounds of the display of the time-resolved activity. <br>
 
-    # Controlling the network
+    Controlling the network
      We saw that the states of the neurons quickly converged to a globally stable fixed point.<br>
      The reason for this fixed point is, that the dampening part dominates the dynamical behavior - we need to increase the weights! <br>
      This we can achieve by increasing the `q_factor`.
@@ -483,7 +494,7 @@ def second_model_to_cache():
     states_critical = state_monitor.get_data()[network_critical.name][network_critical.state.name]
     network_critical.stop()
     return states_critical
-states_critical = second_model_to_cache()
+#states_critical = second_model_to_cache()
 #@st.cache(ttl=24*3600)
 def plot1(states_critical)->None:
     fig = plt.figure(figsize=(7,5))
@@ -492,7 +503,7 @@ def plot1(states_critical)->None:
     plt.plot(states_critical[:, :50])
     st.pyplot(fig)
     
-plot1(states_critical)
+#plot1(states_critical)
 if intro==str("Yes"):
     st.markdown("""
     We find that after increasing the `q_factor`, the network shows a very different behavior. The stable fixed point is gone, instead we observe chaotic network dynamics: <br>
@@ -500,7 +511,7 @@ if intro==str("Yes"):
     """)
 
 
-lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
+#lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
 
 #@st.cache(ttl=24*3600)
 def plot2(lags, ac_fct_critical)->None:
@@ -510,7 +521,7 @@ def plot2(lags, ac_fct_critical)->None:
     plt.ylabel('Correlation')
     plt.plot(lags, ac_fct_critical)
     st.pyplot(fig)
-plot2(lags, ac_fct_critical)
+#plot2(lags, ac_fct_critical)
 if intro==str("Yes"):
 
     st.markdown("""We see that for positive time lags the auto-covariance function still is large. <br>
@@ -612,14 +623,6 @@ st.markdown("""Execution and Results
 In order to execute the LIF E/I network and the infrastructure to monitor the activity, we introduce a ```CustomRunConfig``` where we specify which ProcessModel we select for execution.""")
 
 
-
-from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
-# Import io processes.
-from lava.proc import io
-
-from lava.proc.dense.models import PyDenseModelFloat
-from lava.proc.lif.models import PyLifModelFloat
 
 
 # Configurations for execution.
