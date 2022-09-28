@@ -201,7 +201,7 @@ flatten_run_params = [
     for num_steps in [500, 2000]
 ]
 results_dic = {}
-my_bar = st.progress(0)
+my_bar = st.progress(len(flatten_run_params))
 
 for ind, (neuron_population_size, length_of_simulation) in enumerate(
     flatten_run_params
