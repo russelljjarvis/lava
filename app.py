@@ -53,8 +53,8 @@ from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 
 # Configurations for execution.
-num_steps = int(1000 / 2.0)
-dim = int(50 / 2.0)
+num_steps = int(2000 / 2.0)
+dim = int(200 / 2.0)
 
 
 def compute_ISI(spks):
@@ -161,6 +161,8 @@ if uploaded_file is not None:
     st.write("Model loaded")
     st.write(spks_balanced)
 
+
+    dic0,dic1 = spks_balanced
 
 # Define dimensionality of the network.
 # label = "select network size"
@@ -821,16 +823,6 @@ else:
         network_params_balanced["g_factor"],
     )
 
-    start = time.time()
-    (data_v_balanced, data_v_balanced, spks_balanced) = third_model_to_cache(
-        network_params_balanced,num_steps
-    )
-    stop = time.time()
-    sim_m3 = stop - start
-    st.markdown("simulating model 3 took: {0} seconds".format(sim_m3))
-
-
-
     def fourth_model(network_params_critical,num_steps):
 
         rcfg = CustomRunConfigFloat(
@@ -868,6 +860,17 @@ else:
         lif_network_critical.stop()
         return spks_critical
     
+    start = time.time()
+    (data_v_balanced, data_v_balanced, spks_balanced) = third_model_to_cache(
+        network_params_balanced,num_steps
+    )
+    stop = time.time()
+    sim_m3 = stop - start
+    st.markdown("simulating model 3 took: {0} seconds".format(sim_m3))
+    spike_frame2, spike_times_dic2 = spikes_to_frame(dim, spks_balanced)
+
+
+
     q_factor = np.sqrt(dim / 6)
 
     # Changing the strenghts of the recurrent connections.
