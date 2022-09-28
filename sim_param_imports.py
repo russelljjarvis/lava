@@ -1,3 +1,50 @@
+import time
+
+# Import Process level primitives.
+from lava.magma.core.process.process import AbstractProcess
+from lava.magma.core.process.variable import Var
+from lava.magma.core.process.ports.ports import InPort, OutPort
+from lava.magma.core.model.py.type import LavaPyType
+from lava.magma.core.model.py.ports import PyInPort, PyOutPort
+from lava.magma.core.resources import CPU
+from lava.magma.core.model.model import AbstractProcessModel
+
+# Import parent classes for ProcessModels for Hierarchical Processes.
+from lava.magma.core.model.py.model import PyLoihiProcessModel
+from lava.magma.core.model.sub.model import AbstractSubProcessModel
+
+# Import execution protocol.
+from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
+
+# Import decorators.
+from lava.magma.core.decorator import implements, tag, requires
+
+from scipy.special import erf
+
+
+from lava.magma.core.run_conditions import RunSteps
+from lava.magma.core.run_configs import Loihi1SimCfg
+
+# Import monitoring Process.
+from lava.proc.monitor.process import Monitor
+
+from lava.proc.dense.process import Dense
+from lava.proc.lif.process import LIF
+from convert_params import convert_rate_to_lif_params
+
+# Import bit accurate ProcessModels.
+from lava.proc.dense.models import PyDenseModelBitAcc
+from lava.proc.lif.models import PyLifModelBitAcc
+
+
+from lava.magma.core.run_conditions import RunSteps
+from lava.magma.core.run_configs import Loihi1SimCfg
+
+# Import io processes.
+from lava.proc import io
+
+from lava.proc.dense.models import PyDenseModelFloat
+from lava.proc.lif.models import PyLifModelFloat
 
 
 class EINetwork(AbstractProcess):
@@ -493,9 +540,9 @@ def fifth_model_to_cache(
 
     mapped_params = float2fixed_lif_parameter(params)
 
-    #st.markdown(
+    # st.markdown(
     #    """ Using the mapped parameters, we construct the fully-fledged parameter dictionary for the E/I network Process using the LIF SubProcessModel."""
-    #)
+    # )
 
     # Set up parameters for bit accurate model
     lif_params_critical_fixed = {
@@ -517,13 +564,13 @@ def fifth_model_to_cache(
         "dv_inh": scaling_funct_dudv(lif_params_critical["dv_inh"]),
     }
 
-    #st.markdown(
+    # st.markdown(
     #    """ Execution of bit accurate model
-    #Configurations for execution.
-    #"""
-    #)
+    # Configurations for execution.
+    # """
+    # )
 
-    #num_steps = 1000
+    # num_steps = 1000
     run_cond = RunSteps(num_steps=num_steps)
 
     # Define custom Run Config for execution of bit accurate models.
@@ -584,15 +631,12 @@ def get_params(dim):
     network_params_balanced["g_factor"] = g_factor
     network_params_balanced["q_factor"] = q_factor
 
-
-
     network_params_balanced["weights"] = generate_gaussian_weights(
         dim,
         num_neurons_exc,
         network_params_balanced["q_factor"],
         network_params_balanced["g_factor"],
     )
-
 
     q_factor = np.sqrt(dim / 6)
 
@@ -605,4 +649,4 @@ def get_params(dim):
         network_params_critical["q_factor"],
         network_params_critical["g_factor"],
     )
-    return network_params_balanced,network_params_critical
+    return network_params_balanced, network_params_critical

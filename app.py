@@ -9,12 +9,6 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.model import AbstractProcessModel
 
-from matplotlib import pyplot as plt
-
-import pandas as pd
-import pickle
-import streamlit as st
-import numpy as np
 # Import parent classes for ProcessModels for Hierarchical Processes.
 from lava.magma.core.model.py.model import PyLoihiProcessModel
 from lava.magma.core.model.sub.model import AbstractSubProcessModel
@@ -26,7 +20,6 @@ from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 from lava.magma.core.decorator import implements, tag, requires
 
 from scipy.special import erf
-
 
 
 from lava.magma.core.run_conditions import RunSteps
@@ -53,7 +46,13 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 
-#from something import *
+
+from matplotlib import pyplot as plt
+
+import pandas as pd
+import pickle
+import streamlit as st
+import numpy as np
 from sim_param_imports import *
 
 # Configurations for execution.
@@ -131,7 +130,8 @@ def raster_plot(spks, stride=1, fig=None, color="b", alpha=1):
 
     return fig
 
-def spikes_to_frame(dims, spks) -> (pd.DataFrame,dict):
+
+def spikes_to_frame(dims, spks) -> (pd.DataFrame, dict):
     timesteps = num_time_steps = spks.shape[1]
     stride = 6
     time_steps = np.arange(0, num_time_steps, 1)
@@ -150,6 +150,7 @@ def spikes_to_frame(dims, spks) -> (pd.DataFrame,dict):
 
     return (spike_frame, spike_times_dic)
 
+
 def plot3(spks_balanced) -> None:
     fig = raster_plot(spks=spks_balanced)
     st.pyplot(fig)
@@ -159,63 +160,96 @@ uploaded_file = st.file_uploader("Upload Spike Trains To Compute CV on.")
 if uploaded_file is not None:
     spks_dict_of_dicts = pickle.loads(uploaded_file.read())
     st.write("spikes loaded")
-    #st.write(spks_balanced)
+    # st.write(spks_balanced)
 
     balanced_spikes = spks_dict["balanced"]
     critical_spikes = spks_dict["critical"]
     critical_fixed_spikes = spks_dict["critical_fixed"]
 
-    flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in [500,1000,2000]]
-    #results_dic = {}
+    flatten_run_params = [
+        (dim, num_steps)
+        for dim in [50, 100, 200]
+        for num_steps in [500, 1000, 2000]
+    ]
+    # results_dic = {}
     my_bar = st.progress(0)
 
-    for ind,(dim_global,num_steps) in enumerate(flatten_run_params):
-        balanced_spikes = spks_dict_of_dicts[dim_global,num_steps]["balanced"]
-        critical_spikes = spks_dict_of_dicts[dim_global,num_steps]["critical"]
-        critical_fixed_spikes = spks_dict_of_dicts[dim_global,num_steps]["critical_fixed_spikes"]
+    for ind, (dim_global, num_steps) in enumerate(flatten_run_params):
+        balanced_spikes = spks_dict_of_dicts[dim_global, num_steps]["balanced"]
+        critical_spikes = spks_dict_of_dicts[dim_global, num_steps]["critical"]
+        critical_fixed_spikes = spks_dict_of_dicts[dim_global, num_steps][
+            "critical_fixed_spikes"
+        ]
 
-        for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
+        for spkt in [balanced_spikes, critical_spikes, critical_fixed_spikes]:
             raster_plot(spkt)
-        for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
+        for spkt in [balanced_spikes, critical_spikes, critical_fixed_spikes]:
             result = compute_ISI_CV(spkt)
             st.markdown(result)
 
 else:
-    #from sim_param_imports import *
+    # from sim_param_imports import *
 
-    st.markdown("No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link.")
-    
-    network_params_balanced,network_params_critical = get_params(dim)
+    st.markdown(
+        "No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link."
+    )
 
-    flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in [500,1000,2000]]
+    network_params_balanced, network_params_critical = get_params(dim)
+
+    flatten_run_params = [
+        (dim, num_steps)
+        for dim in [50, 100, 200]
+        for num_steps in [500, 1000, 2000]
+    ]
     results_dic = {}
     my_bar = st.progress(0)
 
-    for ind,(neuron_population_size,length_of_simulation) in enumerate(flatten_run_params):
+    for ind, (neuron_population_size, length_of_simulation) in enumerate(
+        flatten_run_params
+    ):
         num_steps = length_of_simulation
         dim = neuron_population_size
 
-
-        percent_complete = float(ind/len(flatten_run_params))
+        percent_complete = float(ind / len(flatten_run_params))
         my_bar.progress(percent_complete + 1)
-        
-        #sim_param_imports.dim = neuron_population_size
-        (data_v_balanced, data_v_balanced, spks_balanced) = third_model_to_cache(
-            sim_param_imports.network_params_balanced,num_steps
+
+        # sim_param_imports.dim = neuron_population_size
+        (
+            data_v_balanced,
+            data_v_balanced,
+            spks_balanced,
+        ) = third_model_to_cache(
+            sim_param_imports.network_params_balanced, num_steps
         )
-        spks_critical,data_u_critical,data_v_critical,lif_network_critical,lif_params_critical = fourth_model(sim_param_imports.network_params_critical,num_steps)
-        spks_critical_fixed = fifth_model_to_cache(num_steps,data_u_critical,data_v_critical,sim_param_imports.network_params_critical)
+        (
+            spks_critical,
+            data_u_critical,
+            data_v_critical,
+            lif_network_critical,
+            lif_params_critical,
+        ) = fourth_model(sim_param_imports.network_params_critical, num_steps)
+        spks_critical_fixed = fifth_model_to_cache(
+            num_steps,
+            data_u_critical,
+            data_v_critical,
+            sim_param_imports.network_params_critical,
+        )
         spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
         _ = plot3(spks_balanced)
         spike_frame1, spike_times_critical = spikes_to_frame(dim, spks_critical)
         _ = plot3(spks_critical)
-        spike_frame2, spike_times_critical_fixed = spikes_to_frame(dim, spks_critical_fixed)
+        spike_frame2, spike_times_critical_fixed = spikes_to_frame(
+            dim, spks_critical_fixed
+        )
         _ = plot3(spks_critical_fixed)
-        results_dic[dim_global,num_steps] = {"balanced":spike_times_balanced,"critical":spike_times_critical,"critical_fixed":spike_times_critical_fixed}
-    
+        results_dic[dim_global, num_steps] = {
+            "balanced": spike_times_balanced,
+            "critical": spike_times_critical,
+            "critical_fixed": spike_times_critical_fixed,
+        }
+
     st.download_button(
         "Download Spikes",
-
         data=pickle.dumps(results_dic),
         file_name="spks_balanced.pkl",
     )
