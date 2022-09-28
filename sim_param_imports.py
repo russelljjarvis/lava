@@ -1,24 +1,3 @@
-num_neurons_exc = int(dim * 0.8)
-num_neurons_inh = dim - num_neurons_exc
-
-# Single neuron paramters.
-params_exc = {"shape_exc": num_neurons_exc, "dr_exc": 0.01, "bias_exc": 0.1}
-
-params_inh = {"shape_inh": num_neurons_inh, "dr_inh": 0.01, "bias_inh": 0.1}
-
-# Inhibition-exciation balance for scaling inhibitory weights to maintain balance (4 times as many excitatory neurons).
-g_factor = 4.5
-
-# Factor controlling the response properties.
-q_factor = 1
-
-# Parameters Paramters for E/I network.
-network_params_balanced = {}
-
-network_params_balanced.update(params_exc)
-network_params_balanced.update(params_inh)
-network_params_balanced["g_factor"] = g_factor
-network_params_balanced["q_factor"] = q_factor
 
 
 class EINetwork(AbstractProcess):
@@ -426,14 +405,6 @@ def third_model_to_cache(network_params_balanced, num_steps):
     return (data_v_balanced, data_u_balanced, spks_balanced)
 
 
-network_params_balanced["weights"] = generate_gaussian_weights(
-    dim,
-    num_neurons_exc,
-    network_params_balanced["q_factor"],
-    network_params_balanced["g_factor"],
-)
-
-
 def fourth_model(network_params_critical, num_steps):
 
     rcfg = CustomRunConfigFloat(
@@ -522,9 +493,9 @@ def fifth_model_to_cache(
 
     mapped_params = float2fixed_lif_parameter(params)
 
-    st.markdown(
-        """ Using the mapped parameters, we construct the fully-fledged parameter dictionary for the E/I network Process using the LIF SubProcessModel."""
-    )
+    #st.markdown(
+    #    """ Using the mapped parameters, we construct the fully-fledged parameter dictionary for the E/I network Process using the LIF SubProcessModel."""
+    #)
 
     # Set up parameters for bit accurate model
     lif_params_critical_fixed = {
@@ -546,13 +517,13 @@ def fifth_model_to_cache(
         "dv_inh": scaling_funct_dudv(lif_params_critical["dv_inh"]),
     }
 
-    st.markdown(
-        """ Execution of bit accurate model
-    Configurations for execution.
-    """
-    )
+    #st.markdown(
+    #    """ Execution of bit accurate model
+    #Configurations for execution.
+    #"""
+    #)
 
-    num_steps = 1000
+    #num_steps = 1000
     run_cond = RunSteps(num_steps=num_steps)
 
     # Define custom Run Config for execution of bit accurate models.
@@ -590,14 +561,48 @@ def fifth_model_to_cache(
     return spks_critical_fixed
 
 
-q_factor = np.sqrt(dim / 6)
+def get_params(dim):
+    num_neurons_exc = int(dim * 0.8)
+    num_neurons_inh = dim - num_neurons_exc
 
-# Changing the strenghts of the recurrent connections.
-network_params_critical = network_params_balanced.copy()
-network_params_critical["q_factor"] = q_factor
-network_params_critical["weights"] = generate_gaussian_weights(
-    dim,
-    num_neurons_exc,
-    network_params_critical["q_factor"],
-    network_params_critical["g_factor"],
-)
+    # Single neuron paramters.
+    params_exc = {"shape_exc": num_neurons_exc, "dr_exc": 0.01, "bias_exc": 0.1}
+
+    params_inh = {"shape_inh": num_neurons_inh, "dr_inh": 0.01, "bias_inh": 0.1}
+
+    # Inhibition-exciation balance for scaling inhibitory weights to maintain balance (4 times as many excitatory neurons).
+    g_factor = 4.5
+
+    # Factor controlling the response properties.
+    q_factor = 1
+
+    # Parameters Paramters for E/I network.
+    network_params_balanced = {}
+
+    network_params_balanced.update(params_exc)
+    network_params_balanced.update(params_inh)
+    network_params_balanced["g_factor"] = g_factor
+    network_params_balanced["q_factor"] = q_factor
+
+
+
+    network_params_balanced["weights"] = generate_gaussian_weights(
+        dim,
+        num_neurons_exc,
+        network_params_balanced["q_factor"],
+        network_params_balanced["g_factor"],
+    )
+
+
+    q_factor = np.sqrt(dim / 6)
+
+    # Changing the strenghts of the recurrent connections.
+    network_params_critical = network_params_balanced.copy()
+    network_params_critical["q_factor"] = q_factor
+    network_params_critical["weights"] = generate_gaussian_weights(
+        dim,
+        num_neurons_exc,
+        network_params_critical["q_factor"],
+        network_params_critical["g_factor"],
+    )
+    return network_params_balanced,network_params_critical

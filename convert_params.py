@@ -10,7 +10,7 @@ from scipy.special import erf
 
 # Define auxiliary functions for weight conversion.
 def _mean_input(num_neurons_exc, gamma, g_factor, weight, rate, bias):
-    '''
+    """
     Calculate mean input to single neuron given mean excitatory weight.
 
     Parameters
@@ -32,13 +32,14 @@ def _mean_input(num_neurons_exc, gamma, g_factor, weight, rate, bias):
     -------
     mean_inp : float
         Mean input received by each neuron
-    '''
+    """
     mean_inp = num_neurons_exc * (1 - gamma * g_factor) * weight * rate + bias
 
     return mean_inp
 
+
 def _std_input(num_neurons_exc, gamma, g_factor, weight, rate):
-    '''
+    """
     Calculate mean input to single neuron given mean excitatory weight.
 
     Parameters
@@ -58,11 +59,12 @@ def _std_input(num_neurons_exc, gamma, g_factor, weight, rate):
     -------
     mean_inp : float
         Mean input received by each neuron
-    '''
-    return num_neurons_exc * (1 + gamma * g_factor**2) * weight ** 2 * rate
+    """
+    return num_neurons_exc * (1 + gamma * g_factor ** 2) * weight ** 2 * rate
+
 
 def _y_th(vth, mean, std, dv_exc, du_exc):
-    '''
+    """
     Effective threshold, see Grytskyy et al. 2013.
 
     Parameters
@@ -82,14 +84,15 @@ def _y_th(vth, mean, std, dv_exc, du_exc):
     -------
     yth : float
         Effective threshold of neuron in network
-    '''
+    """
     y_th = (vth - mean) / std
     y_th += np.sqrt(2) * np.abs(zetac(0.5)) * np.sqrt(dv_exc / du_exc) / 2
 
     return y_th
 
+
 def _y_r(mean, std, dv_exc, du_exc):
-    '''
+    """
     Effective reset, see Grytskyy et al. 2013.
 
     Parameters
@@ -109,20 +112,22 @@ def _y_r(mean, std, dv_exc, du_exc):
     -------
     yr : float
         Effective reset of neuron in network
-    '''
-    y_r = (- 1 * mean) / std
+    """
+    y_r = (-1 * mean) / std
     y_r += np.sqrt(2) * np.abs(zetac(0.5)) * np.sqrt(dv_exc / du_exc) / 2
 
     return y_r
 
+
 def f(y):
-    '''
+    """
     Derivative of transfer function of LIF neuron at given argument.
-    '''
+    """
     return np.exp(y ** 2) * (1 + erf(y))
 
+
 def _alpha(vth, mean, std, dv_exc, du_exc):
-    '''
+    """
     Auxiliary variable describing contribution of weights for weight
     mapping given network state, see Grytskyy et al. 2013.
 
@@ -143,16 +148,18 @@ def _alpha(vth, mean, std, dv_exc, du_exc):
     -------
     val : float
         Contribution of weight
-    '''
+    """
     val = np.sqrt(np.pi) * (mean * dv_exc * 0.01) ** 2
     val *= 1 / std
-    val *= (f(_y_th(vth, mean, std, dv_exc, du_exc))
-            - f(_y_r(mean, std, dv_exc, du_exc)))
+    val *= f(_y_th(vth, mean, std, dv_exc, du_exc)) - f(
+        _y_r(mean, std, dv_exc, du_exc)
+    )
 
     return val
 
+
 def _beta(vth, mean, std, dv_exc, du_exc):
-    '''
+    """
     Auxiliary variable describing contribution of square of weights for
     weight mapping given network state, see Grytskyy et al. 2013.
 
@@ -173,17 +180,30 @@ def _beta(vth, mean, std, dv_exc, du_exc):
     -------
     val : float
         Contribution of square of weights
-    '''
+    """
     val = np.sqrt(np.pi) * (mean * dv_exc * 0.01) ** 2
-    val *= 1/(2 * std ** 2)
-    val *= (f(_y_th(vth, mean, std, dv_exc, du_exc)) * (vth - mean) / std
-            - f(_y_r(mean, std, dv_exc, du_exc)) * (-1 * mean) / std)
+    val *= 1 / (2 * std ** 2)
+    val *= (
+        f(_y_th(vth, mean, std, dv_exc, du_exc)) * (vth - mean) / std
+        - f(_y_r(mean, std, dv_exc, du_exc)) * (-1 * mean) / std
+    )
 
     return val
 
-def convert_rate_to_lif_params(shape_exc, dr_exc, bias_exc, shape_inh, dr_inh,
-                              bias_inh, g_factor, q_factor, weights, **kwargs):
-    '''Convert rate parameters to LIF parameters.
+
+def convert_rate_to_lif_params(
+    shape_exc,
+    dr_exc,
+    bias_exc,
+    shape_inh,
+    dr_inh,
+    bias_inh,
+    g_factor,
+    q_factor,
+    weights,
+    **kwargs,
+):
+    """Convert rate parameters to LIF parameters.
     The mapping is based on A unified view on weakly correlated recurrent
     network, Grytskyy et al. 2013.
 
@@ -212,7 +232,7 @@ def convert_rate_to_lif_params(shape_exc, dr_exc, bias_exc, shape_inh, dr_inh,
     -------
     lif_network_dict : dict
         Parameter dictionary for LIF network
-    '''
+    """
     # Copy weight parameters.
     weights_local = weights.copy()
 
@@ -268,22 +288,22 @@ def convert_rate_to_lif_params(shape_exc, dr_exc, bias_exc, shape_inh, dr_inh,
     # Function describing mapping of rate to LIF weights problem about
     # finding a zero.
     def func(weight):
-        '''
+        """
         Adapted from Grytskyy et al..
-        '''
-        mean_inp = _mean_input(num_neurons_exc, gamma,
-                               g_factor, weight, rate, bias)
-        std_inp = _std_input(num_neurons_exc, gamma,
-                            g_factor, weight, rate)
+        """
+        mean_inp = _mean_input(
+            num_neurons_exc, gamma, g_factor, weight, rate, bias
+        )
+        std_inp = _std_input(num_neurons_exc, gamma, g_factor, weight, rate)
         alpha = _alpha(vth_exc, mean_inp, std_inp, dv_exc, du_inh)
         beta = _beta(vth_exc, mean_inp, std_inp, dv_exc, du_inh)
 
-        return mean_exc_weight - alpha * weight - beta * weight**2
+        return mean_exc_weight - alpha * weight - beta * weight ** 2
 
     # Solve for weights of LIF network retaining correlation structure of
     # rate network.
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', '', RuntimeWarning)
+        warnings.filterwarnings("ignore", "", RuntimeWarning)
         try:
             mean_exc_weight_new = fsolve(func, mean_exc_weight)[0]
             # Determine weight scaling factor
@@ -297,7 +317,7 @@ def convert_rate_to_lif_params(shape_exc, dr_exc, bias_exc, shape_inh, dr_inh,
     if weight_scale > 0:
         weights_local *= weight_scale
     else:
-        print('Weigh scaling factor not positive: No weight scaling possible')
+        print("Weigh scaling factor not positive: No weight scaling possible")
 
     # Scale weights with integration time step.
     weights_local[:, :num_neurons_exc] *= du_exc
@@ -310,22 +330,24 @@ def convert_rate_to_lif_params(shape_exc, dr_exc, bias_exc, shape_inh, dr_inh,
         "vth_exc": vth_exc,
         "du_exc": du_exc,
         "dv_exc": dv_exc,
-        "bias_mant_exc": bias_exc}
+        "bias_mant_exc": bias_exc,
+    }
 
     lif_params_inh = {
         "shape_inh": num_neurons_inh,
         "vth_inh": vth_inh,
         "du_inh": du_inh,
         "dv_inh": dv_inh,
-        "bias_mant_inh": bias_inh}
+        "bias_mant_inh": bias_inh,
+    }
 
     # Parameters Paramters for E/I network/
     network_params_lif = {}
 
     network_params_lif.update(lif_params_exc)
     network_params_lif.update(lif_params_inh)
-    network_params_lif['g_factor'] = g_factor
-    network_params_lif['q_factor'] = q_factor
-    network_params_lif['weights'] = weights_local
+    network_params_lif["g_factor"] = g_factor
+    network_params_lif["q_factor"] = q_factor
+    network_params_lif["weights"] = weights_local
 
     return network_params_lif
