@@ -53,21 +53,21 @@ dim = 100
 
 
 # Define dimensionality of the network.
-label = "select network size"
+#label = "select network size"
 #options = [100,150,200,250]
 #dim = st.selectbox(label, options)
 
-label = "select run time of the network"
+#label = "select run time of the network"
 #options = [500,250,1250,2500]
 #dim = 100
 #runtime = st.selectbox(label, options)
 
 
-label = "Display Introduction ?"
-options = ["No","Yes"]
+#label = "Display Introduction ?"
+#options = ["No","Yes"]
 #dim = 100
-intro = st.selectbox(label, options)
-
+#intro = st.selectbox(label, options)
+intro = "No"
 shape = (dim,)
 
 st.markdown(""" We represent the dimensionality by {0} neurons. As stated above 80% of the neurons will be excitatory.""".format(dim))
@@ -640,10 +640,8 @@ class CustomRunConfigFloat(Loihi1SimCfg):
             return PyDenseModelFloat
         else:
             return super().select(proc, proc_models)
-#@st.cache(ttl=24*3600)
-#@st.cache(suppress_st_warning=True)
 
-def third_model_to_cache(network_params_balanced,run_cond):
+def third_model_to_cache(network_params_balanced):
     rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
 
     # Instantiating network and IO processes.
