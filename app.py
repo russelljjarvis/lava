@@ -69,8 +69,8 @@ dim = 100
 #intro = st.selectbox(label, options)
 intro = "No"
 shape = (dim,)
-
-st.markdown(""" We represent the dimensionality by {0} neurons. As stated above 80% of the neurons will be excitatory.""".format(dim))
+if False:
+    st.markdown(""" We represent the dimensionality by {0} neurons. As stated above 80% of the neurons will be excitatory.""".format(dim))
 num_neurons_exc = int(dim * 0.8)
 num_neurons_inh = dim - num_neurons_exc
 
@@ -730,7 +730,7 @@ _=plot3(spks_balanced)
 with open("spike_data.p","wb") as f:
     st.download_button(
         "Download Model",
-        data=pickle.dumps(spks_balanced),
+        data=pickle.dump(spks_balanced),
         file_name="spike_data.p",
     )
 
