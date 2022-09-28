@@ -189,24 +189,21 @@ else:
     results_dic = {}
     my_bar = st.progress(0)
 
-    for ind,(dim_global,num_steps) in enumerate(flatten_run_params):
-        percent_complete = float(ind/len(flatten_run_params))
+    for ind,(neuron_population_size,num_steps) in enumerate(flatten_run_params):
+
+        dim = neuron_population_size
+
         
+        percent_complete = float(ind/len(flatten_run_params))
         my_bar.progress(percent_complete + 1)
-
-        sim_param_imports.dim = dim_global
-
-
+        
+        #sim_param_imports.dim = neuron_population_size
         (data_v_balanced, data_v_balanced, spks_balanced) = third_model_to_cache(
             sim_param_imports.network_params_balanced,num_steps
         )
         spks_critical,data_u_critical,data_v_critical,lif_network_critical,lif_params_critical = fourth_model(sim_param_imports.network_params_critical,num_steps)
-
         spks_critical_fixed = fifth_model_to_cache(num_steps,data_u_critical,data_v_critical,sim_param_imports.network_params_critical)
-
-
         spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
-
         _ = plot3(spks_balanced)
         spike_frame1, spike_times_critical = spikes_to_frame(dim, spks_critical)
         _ = plot3(spks_critical)
