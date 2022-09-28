@@ -171,7 +171,6 @@ if uploaded_file is not None:
         for dim in [50, 100, 200]
         for num_steps in [500, 1000, 2000]
     ]
-    # results_dic = {}
     my_bar = st.progress(0)
 
     for ind, (neuron_population_size, length_of_simulation) in enumerate(flatten_run_params):
@@ -188,7 +187,6 @@ if uploaded_file is not None:
             st.markdown(result)
 
 else:
-    # from sim_param_imports import *
 
     st.markdown(
         "No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link."
@@ -211,7 +209,7 @@ else:
         dim = neuron_population_size
         network_params_balanced, network_params_critical = get_params(dim)
 
-        percent_complete = float(ind / len(flatten_run_params))
+        percent_complete = float(ind)# / len(flatten_run_params))
         my_bar.progress(percent_complete + 1)
 
         (
@@ -226,7 +224,6 @@ else:
             data_u_critical,
             data_v_critical,
             lif_network_critical,
-            lif_params_critical,
         ) = fourth_model(network_params_critical, num_steps, dim)
 
         spks_critical_fixed = fifth_model_to_cache(

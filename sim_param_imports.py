@@ -492,7 +492,6 @@ def fourth_model(network_params_critical, num_steps, dim):
         data_u_critical,
         data_v_critical,
         lif_network_critical,
-        lif_params_critical,
     )
 
 
