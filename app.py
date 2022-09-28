@@ -9,9 +9,12 @@ from lava.magma.core.model.py.ports import PyInPort, PyOutPort
 from lava.magma.core.resources import CPU
 from lava.magma.core.model.model import AbstractProcessModel
 
+from matplotlib import pyplot as plt
+
 import pandas as pd
 import pickle
-
+import streamlit as st
+import numpy as np
 # Import parent classes for ProcessModels for Hierarchical Processes.
 from lava.magma.core.model.py.model import PyLoihiProcessModel
 from lava.magma.core.model.sub.model import AbstractSubProcessModel
@@ -24,9 +27,7 @@ from lava.magma.core.decorator import implements, tag, requires
 
 from scipy.special import erf
 
-import streamlit as st
-import numpy as np
-from matplotlib import pyplot as plt
+
 
 from lava.magma.core.run_conditions import RunSteps
 from lava.magma.core.run_configs import Loihi1SimCfg
@@ -52,7 +53,8 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 
-from sim_param_imports *
+#from something import *
+from sim_param_imports import *
 
 # Configurations for execution.
 
@@ -189,11 +191,11 @@ else:
     results_dic = {}
     my_bar = st.progress(0)
 
-    for ind,(neuron_population_size,num_steps) in enumerate(flatten_run_params):
-
+    for ind,(neuron_population_size,length_of_simulation) in enumerate(flatten_run_params):
+        num_steps = length_of_simulation
         dim = neuron_population_size
 
-        
+
         percent_complete = float(ind/len(flatten_run_params))
         my_bar.progress(percent_complete + 1)
         
