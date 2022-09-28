@@ -378,7 +378,6 @@ else:
             state_new += self.weights @ erf(state)  # Add the recurrent input.
             return state_new
 
-        # @st.cache
         def run_spk(self):
             """The run function that performs the actual computation during
             execution orchestrated by a PyLoihiProcessModel using the
@@ -414,7 +413,6 @@ else:
     if intro == str("Yes"):
         display_intro1()
 
-    # @st.cache(ttl=24*3600)
     def generate_gaussian_weights(dim, num_neurons_exc, q_factor, g_factor):
         """Generate connectivity drawn from a Gaussian distribution with mean 0
         and std of (2 * q_factor) ** 2  / dim.
@@ -463,8 +461,6 @@ else:
 
         return weights
 
-    # @st.cache(ttl=24*3600)
-    # @st.cache(suppress_st_warning=True)
     def first_model_to_cache():
         # Generate weights and store them in parameter dictionary.
         network_params_balanced["weights"] = generate_gaussian_weights(
@@ -580,8 +576,6 @@ else:
 
     # lags, ac_fct_balanced = auto_cov_fct(acts=states_balanced)
 
-    # @st.cache(ttl=24*3600)
-    # @st.cache(suppress_st_warning=False, hash_funcs=True)
     def plot0(lags, ac_fct_balanced) -> None:
         # Plotting the auto-correlation function.
         fig = plt.figure(figsize=(7, 5))
@@ -605,9 +599,6 @@ else:
         This we can achieve by increasing the `q_factor`.
         """
         )
-
-    # @st.cache(ttl=24*3600)
-    # @st.cache(suppress_st_warning=True)
 
     def second_model_to_cache():
         # Defining new, larger q_factor.
@@ -643,7 +634,7 @@ else:
         return states_critical
 
     # states_critical = second_model_to_cache()
-    # @st.cache(ttl=24*3600)
+
     def plot1(states_critical) -> None:
         fig = plt.figure(figsize=(7, 5))
         plt.xlabel("Time Step")
@@ -662,7 +653,6 @@ else:
 
     # lags, ac_fct_critical = auto_cov_fct(acts=states_critical)
 
-    # @st.cache(ttl=24*3600)
     def plot2(lags, ac_fct_critical) -> None:
         # Plotting the auto-correlation function.
         fig = plt.figure(figsize=(7, 5))
@@ -839,7 +829,44 @@ else:
     st.markdown("simulating model 3 took: {0} seconds".format(sim_m3))
 
 
-    spike_frame, spike_times_dic = spikes_to_frame(dim, spks_balanced)
+
+    def fourth_model():
+        num_steps = 1000
+        rcfg = CustomRunConfigFloat(
+            select_tag="lif_neurons", select_sub_proc_model=True
+        )
+        run_cond = RunSteps(num_steps=num_steps)
+
+        # Creating new new network with changed weights.
+        lif_network_critical = EINetwork(
+            **network_params_critical, convert=True
+        )
+        outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
+
+        # Instantiate Monitors to record the voltage and the current of the LIF neurons
+        monitor_v = Monitor()
+        monitor_u = Monitor()
+
+        lif_network_critical.outport.connect(outport_plug.a_in)
+        monitor_v.probe(target=lif_network_critical.state, num_steps=num_steps)
+        monitor_u.probe(
+            target=lif_network_critical.state_alt, num_steps=num_steps
+        )
+
+        lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
+
+        #st.markdown("""Fetching spiking activity.""")
+        spks_critical = outport_plug.data.get()
+        data_v_critical = monitor_v.get_data()[lif_network_critical.name][
+            lif_network_critical.state.name
+        ]
+        data_u_critical = monitor_u.get_data()[lif_network_critical.name][
+            lif_network_critical.state_alt.name
+        ]
+
+        lif_network_critical.stop()
+        return spks_critical
+    spks_critical = fourth_model()
 
     if intro == str("Yes"):
         st.markdown(
@@ -854,8 +881,6 @@ else:
         fig = raster_plot(spks=spks_balanced)
         st.pyplot(fig)
 
-    import time
-
     start = time.time()
     _ = plot3(spks_balanced)
     stop = time.time()
@@ -863,10 +888,17 @@ else:
     st.markdown(
         "plotting spikes model 3 took: {0} seconds".format(plot_spikes_t)
     )
-
+    spike_frame2, spike_times_dic2 = spikes_to_frame(dim, spks_critical)
+    start = time.time()
+    _ = plot3(spks_critical)
+    stop = time.time()
+    plot_spikes_t = stop - start
+    st.markdown(
+        "plotting spikes model 3 took: {0} seconds".format(spks_critical)
+    )
     st.download_button(
         "Download Spikes",
-        data=pickle.dumps(spike_times_dic),
+        data=pickle.dumps([spike_times_dic,spike_times_dic2]),
         file_name="spks_balanced.pkl",
     )
 
@@ -897,7 +929,7 @@ else:
 
         offset = 50
         timesteps = np.arange(0, 1000, 1)[offset:-offset]
-
+        """
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
         ax1.set_title("Mean rate of Rate network")
         ax1.plot(
@@ -918,9 +950,9 @@ else:
         )
         ax2.set_xlabel("Time Step")
         st.pyplot(f)
-
+        """
         st.markdown(
-            """Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
+        """Both networks behave similarly inasmuch the rates are stationary with only very small fluctuations around the baseline in the LIF case.<br>
         Next, we turn to the auto-covariance function.
         """
         )
@@ -935,20 +967,21 @@ else:
             plt.plot(lags, ac_fct)
             st.pyplot(fig)
 
-        _ = plot4(binned_sps_balanced)
-        st.markdown(
-            """
-        Examining the auto-covariance function, we first note that again the overall values are small. 
-        Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.
-        This means that the network has no memory of its previous states: 
-        Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. 
-        Such a network is unfit to perform meaningful computation.
+        #_ = plot4(binned_sps_balanced)
+        if False:
+            st.markdown(
+                """
+            Examining the auto-covariance function, we first note that again the overall values are small. 
+            Moreover, we see that for non-vanishing time lags the auto-covariance function quickly decays.
+            This means that the network has no memory of its previous states: 
+            Already after few time step we lost almost all information of the previous network state, former states leave little trace in the overall network activity. 
+            Such a network is unfit to perform meaningful computation.
 
-        #### Controlling the network
-        Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.
-        Dynamically, this increase again should result in a fundamentally different network state.
-        """
-        )
+            #### Controlling the network
+            Next, we pass the rate network parameters for which we increased the `q_factor` to the spiking E/I network.
+            Dynamically, this increase again should result in a fundamentally different network state.
+            """
+            )
 
         num_steps = 1000
         rcfg = CustomRunConfigFloat(
@@ -974,7 +1007,7 @@ else:
 
         lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
 
-        st.markdown("""Fetching spiking activity.""")
+        #st.markdown("""Fetching spiking activity.""")
         spks_critical = outport_plug.data.get()
         data_v_critical = monitor_v.get_data()[lif_network_critical.name][
             lif_network_critical.state.name
@@ -991,7 +1024,7 @@ else:
             st.pyplot(fig)
             return None
 
-        _ = plot5(spks_critical)
+        #_ = plot5(spks_critical)
         st.markdown(
             """
         Here we see a qualitatively different network activity where the recurrent connections play a more dominant role: <br>
@@ -1032,7 +1065,7 @@ else:
             ).T.mean(axis=1)[offset:-offset],
         )
         ax2.set_xlabel("Time Step")
-        st.pyplot(f)
+        #st.pyplot(f)
 
         st.markdown(
             """Again, we observe a similar behavior on the rate level:<br>
@@ -1055,7 +1088,7 @@ else:
             plt.tight_layout()
             st.pyplot(f)
 
-        fig6(lags, ac_fct_lif_critical, ac_fct_critical)
+        #fig6(lags, ac_fct_lif_critical, ac_fct_critical)
 
         st.markdown(
             """
