@@ -154,7 +154,7 @@ def plot3(spks_balanced) -> None:
 uploaded_file = st.file_uploader("Upload Spike Trains To Compute CV on.")
 
 if uploaded_file is not None:
-    spks_dict = pickle.loads(uploaded_file.read())
+    spks_dict_of_dicts = pickle.loads(uploaded_file.read())
     st.write("spikes loaded")
     #st.write(spks_balanced)
 
@@ -162,11 +162,20 @@ if uploaded_file is not None:
     critical_spikes = spks_dict["critical"]
     critical_fixed_spikes = spks_dict["critical_fixed"]
 
-    for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
-        raster_plot(spkt)
-    for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
-        result = compute_ISI_CV(spkt)
-        st.markdown(result)
+    flatten_run_params = [(dim,num_steps) for dim in [50,100,200] for num_steps in [500,1000,2000]]
+    #results_dic = {}
+    my_bar = st.progress(0)
+
+    for ind,(dim_global,num_steps) in enumerate(flatten_run_params):
+        balanced_spikes = spks_dict_of_dicts[dim_global,num_steps]["balanced"]
+        critical_spikes = spks_dict_of_dicts[dim_global,num_steps]["critical"]
+        critical_fixed_spikes = spks_dict_of_dicts[dim_global,num_steps]["critical_fixed_spikes"]
+
+        for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
+            raster_plot(spkt)
+        for spkt in [balanced_spikes,critical_spikes,critical_fixed_spikes]:
+            result = compute_ISI_CV(spkt)
+            st.markdown(result)
 
 else:
     #from sim_param_imports import *
