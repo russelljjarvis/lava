@@ -194,7 +194,6 @@ else:
         "No files where uploaded yet, so generating the data that make up those files... Please Download them when done with the Download link."
     )
 
-    network_params_balanced, network_params_critical = get_params(dim)
 
     flatten_run_params = [
         (dim, num_steps)
@@ -207,8 +206,10 @@ else:
     for ind, (neuron_population_size, length_of_simulation) in enumerate(
         flatten_run_params
     ):
+
         num_steps = length_of_simulation
         dim = neuron_population_size
+        network_params_balanced, network_params_critical = get_params(dim)
 
         percent_complete = float(ind / len(flatten_run_params))
         my_bar.progress(percent_complete + 1)
