@@ -420,7 +420,9 @@ class CustomRunConfigFloat(Loihi1SimCfg):
             return super().select(proc, proc_models)
 
 
-def third_model_to_cache(network_params_balanced, num_steps):
+def third_model_to_cache(network_params_balanced, num_steps, dim):
+    shape = (dim,)
+
     rcfg = CustomRunConfigFloat(
         select_tag="lif_neurons", select_sub_proc_model=True
     )
@@ -453,7 +455,8 @@ def third_model_to_cache(network_params_balanced, num_steps):
     return (data_v_balanced, data_u_balanced, spks_balanced)
 
 
-def fourth_model(network_params_critical, num_steps):
+def fourth_model(network_params_critical, num_steps, dim):
+    shape = (dim,)
 
     rcfg = CustomRunConfigFloat(
         select_tag="lif_neurons", select_sub_proc_model=True

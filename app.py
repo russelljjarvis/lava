@@ -219,7 +219,7 @@ else:
             data_v_balanced,
             spks_balanced,
         ) = third_model_to_cache(
-            network_params_balanced, num_steps
+            network_params_balanced, num_steps, dim
         )
         (
             spks_critical,
@@ -227,7 +227,8 @@ else:
             data_v_critical,
             lif_network_critical,
             lif_params_critical,
-        ) = fourth_model(network_params_critical, num_steps)
+        ) = fourth_model(network_params_critical, num_steps, dim)
+
         spks_critical_fixed = fifth_model_to_cache(
             num_steps,
             data_u_critical,
