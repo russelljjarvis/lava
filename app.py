@@ -1,54 +1,5 @@
-"""
-# Import Process level primitives.
-from lava.magma.core.process.process import AbstractProcess
-from lava.magma.core.process.variable import Var
-from lava.magma.core.process.ports.ports import InPort, OutPort
-from lava.magma.core.model.py.type import LavaPyType
-from lava.magma.core.model.py.ports import PyInPort, PyOutPort
-from lava.magma.core.resources import CPU
-from lava.magma.core.model.model import AbstractProcessModel
-
-# Import parent classes for ProcessModels for Hierarchical Processes.
-from lava.magma.core.model.py.model import PyLoihiProcessModel
-from lava.magma.core.model.sub.model import AbstractSubProcessModel
-
-# Import execution protocol.
-from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
-
-# Import decorators.
-from lava.magma.core.decorator import implements, tag, requires
-
-from scipy.special import erf
-
-
-from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
-
-# Import monitoring Process.
-from lava.proc.monitor.process import Monitor
-
-from lava.proc.dense.process import Dense
-from lava.proc.lif.process import LIF
-from convert_params import convert_rate_to_lif_params
-
-# Import bit accurate ProcessModels.
-from lava.proc.dense.models import PyDenseModelBitAcc
-from lava.proc.lif.models import PyLifModelBitAcc
-
-
-from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
-
-# Import io processes.
-from lava.proc import io
-
-from lava.proc.dense.models import PyDenseModelFloat
-from lava.proc.lif.models import PyLifModelFloat
-"""
 import time
-
 from matplotlib import pyplot as plt
-
 import pandas as pd
 import pickle
 import streamlit as st
@@ -198,7 +149,7 @@ st.markdown(
 flatten_run_params = [
     (dim, num_steps)
     for dim in [75, 200]
-    for num_steps in [500, 2000]
+    for num_steps in [500, 2500]
 ]
 results_dic = {}
 my_bar = st.progress(len(flatten_run_params))
@@ -251,8 +202,15 @@ for ind, (neuron_population_size, length_of_simulation) in enumerate(
         "critical_fixed": spike_times_critical_fixed,
     }
 
-st.download_button(
-    "Download Spikes",
-    data=pickle.dumps(results_dic),
-    file_name="spks_balanced.pkl",
-)
+    st.download_button(
+        str(neuron_population_size)+str(length_of_simulation),
+        data=pickle.dumps(results_dic[neuron_population_size, length_of_simulation]),
+        file_name=str(neuron_population_size)+str(length_of_simulation)+".pkl",
+    )
+
+
+#st.download_button(
+#    "Download Spikes",
+#    data=pickle.dumps(results_dic),
+#    file_name="spks_balanced.pkl",
+#)
