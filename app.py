@@ -209,7 +209,7 @@ else:
         dim = neuron_population_size
         network_params_balanced, network_params_critical = get_params(dim)
 
-        percent_complete = float(ind)# / len(flatten_run_params))
+        percent_complete = float(ind/9.0)
         my_bar.progress(percent_complete + 1)
 
         (
