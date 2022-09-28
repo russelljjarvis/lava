@@ -168,21 +168,22 @@ if uploaded_file is not None:
 
     flatten_run_params = [
         (dim, num_steps)
-        for dim in [50, 100, 200]
-        for num_steps in [500, 1000, 2000]
+        for dim in [100, 200]
+        for num_steps in [1000, 2000]
     ]
+
     my_bar = st.progress(0)
 
     for ind, (neuron_population_size, length_of_simulation) in enumerate(flatten_run_params):
-        balanced_spikes = spks_dict_of_dicts[neuron_population_size, length_of_simulation]["balanced"]
+        b#alanced_spikes = spks_dict_of_dicts[neuron_population_size, length_of_simulation]["balanced"]
         critical_spikes = spks_dict_of_dicts[neuron_population_size, length_of_simulation]["critical"]
         critical_fixed_spikes = spks_dict_of_dicts[neuron_population_size, length_of_simulation][
             "critical_fixed_spikes"
         ]
 
-        for spkt in [balanced_spikes, critical_spikes, critical_fixed_spikes]:
+        for spkt in [critical_spikes, critical_fixed_spikes]:
             raster_plot(spkt)
-        for spkt in [balanced_spikes, critical_spikes, critical_fixed_spikes]:
+        for spkt in [critical_spikes, critical_fixed_spikes]:
             result = compute_ISI_CV(spkt)
             st.markdown(result)
 
@@ -195,8 +196,8 @@ else:
 
     flatten_run_params = [
         (dim, num_steps)
-        for dim in [50, 100, 200]
-        for num_steps in [500, 1000, 2000]
+        for dim in [100, 200]
+        for num_steps in [1000, 2000]
     ]
     results_dic = {}
     my_bar = st.progress(0)
@@ -209,9 +210,9 @@ else:
         dim = neuron_population_size
         network_params_balanced, network_params_critical = get_params(dim)
 
-        percent_complete = float(ind/9.0)
+        percent_complete = float(ind/4.0)
         my_bar.progress(percent_complete + 1)
-
+        """
         (
             data_v_balanced,
             data_v_balanced,
@@ -219,6 +220,10 @@ else:
         ) = third_model_to_cache(
             network_params_balanced, num_steps, dim
         )
+        #spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
+        #_ = plot3(spks_balanced)
+        #"balanced": spike_times_balanced,
+        """
         (
             spks_critical,
             data_u_critical,
@@ -232,8 +237,7 @@ else:
             data_v_critical,
             network_params_critical,
         )
-        spike_frame0, spike_times_balanced = spikes_to_frame(dim, spks_balanced)
-        _ = plot3(spks_balanced)
+
         spike_frame1, spike_times_critical = spikes_to_frame(dim, spks_critical)
         _ = plot3(spks_critical)
         spike_frame2, spike_times_critical_fixed = spikes_to_frame(
@@ -241,7 +245,7 @@ else:
         )
         _ = plot3(spks_critical_fixed)
         results_dic[neuron_population_size, length_of_simulation] = {
-            "balanced": spike_times_balanced,
+            
             "critical": spike_times_critical,
             "critical_fixed": spike_times_critical_fixed,
         }
