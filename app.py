@@ -782,6 +782,7 @@ else:
         rcfg = CustomRunConfigFloat(
             select_tag="lif_neurons", select_sub_proc_model=True
         )
+        run_cond = RunSteps(num_steps=num_steps)
 
         # Instantiating network and IO processes.
         lif_network_balanced = EINetwork(
