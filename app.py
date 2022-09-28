@@ -672,8 +672,12 @@ network_params_balanced['weights'] = generate_gaussian_weights(dim,
                                                                 network_params_balanced['q_factor'],
                                                                 network_params_balanced['g_factor'])
 
+import time
+start = time.time()
 (data_v_balanced,data_v_balanced,spks_balanced)=third_model_to_cache(network_params_balanced)
-
+stop = time.time()
+sim_m3 = stop-start
+st.markdown("simulating model 3 took: {0} seconds".format(sim_m3))
 if intro==str("Yes"):
     st.markdown("""Visualizing the activity
     First, we visually inspect to spiking activity of the neurons in the network.<br>
@@ -728,12 +732,12 @@ def plot3(spks_balanced)->None:
 
 _=plot3(spks_balanced)
 
-#with open("spike_data.p","wb") as f:
-st.download_button(
-    "Download Model",
-    data=pickle.dump(spks_balanced),
-    file_name="spike_data.p",
-)
+with open("spike_data.p","wb") as f:
+    st.download_button(
+        "Download Model",
+        data=pickle.dump(spks_balanced,f),
+        file_name="spike_data.p",
+    )
 
 uploaded_file = st.file_uploader("Upload Model")
 
