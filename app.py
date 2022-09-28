@@ -728,12 +728,12 @@ def plot3(spks_balanced)->None:
 
 _=plot3(spks_balanced)
 
-with open("spike_data.p","wb") as f:
-    st.download_button(
-        "Download Model",
-        data=pickle.dump(spks_balanced),
-        file_name="spike_data.p",
-    )
+#with open("spike_data.p","wb") as f:
+st.download_button(
+    "Download Model",
+    data=pickle.dump(spks_balanced),
+    file_name="spike_data.p",
+)
 
 uploaded_file = st.file_uploader("Upload Model")
 
