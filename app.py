@@ -9,6 +9,7 @@ from lava.magma.core.resources import CPU
 from lava.magma.core.model.model import AbstractProcessModel
 
 import pandas as pd    
+import pickle 
 
 # Import parent classes for ProcessModels for Hierarchical Processes.
 from lava.magma.core.model.py.model import PyLoihiProcessModel
@@ -48,8 +49,8 @@ from lava.proc import io
 from lava.proc.dense.models import PyDenseModelFloat
 from lava.proc.lif.models import PyLifModelFloat
 # Configurations for execution.
-num_steps = 1000
-dim = 100
+num_steps = 1000/2
+dim = 100/2
 
 
 # Define dimensionality of the network.
