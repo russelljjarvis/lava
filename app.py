@@ -365,11 +365,11 @@ def first_model_to_cache():
     return states_balanced
 
 #states_balanced = first_model_to_cache()
-#st.markdown("""Visualizing the activity
-#We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
-#""")
+if intro==str("Yes"):
+    st.markdown("""Visualizing the activity
+    We first have a look at the activity of the network by plotting the numerical value of the state of the first $50$ neurons.
+    """)
 
-#@st.cache(hash_funcs={matplotlib.figure.Figure: lambda _: None})
 def cache_fig(states_balanced)->None:
     fig = plt.figure(figsize=(7,5))
     plt.xlabel('Time Step')
@@ -398,7 +398,7 @@ def display_intro2():
 if intro==str("Yes"):
     display_intro2()
     
-@st.cache(ttl=24*3600)
+#@st.cache(ttl=24*3600)
 def auto_cov_fct(acts, max_lag=100, offset=200):
     """Auto-correlation function of parallel spike trains.
     
@@ -618,9 +618,9 @@ class SubEINetworkModel(AbstractSubProcessModel):
         proc.vars.state.alias(self.lif.vars.v)
         proc.vars.state_alt.alias(self.lif.vars.u)
 
-
-st.markdown("""Execution and Results
-In order to execute the LIF E/I network and the infrastructure to monitor the activity, we introduce a ```CustomRunConfig``` where we specify which ProcessModel we select for execution.""")
+if intro==str("Yes"):
+    st.markdown("""Execution and Results
+    In order to execute the LIF E/I network and the infrastructure to monitor the activity, we introduce a ```CustomRunConfig``` where we specify which ProcessModel we select for execution.""")
 
 
 
@@ -643,7 +643,7 @@ class CustomRunConfigFloat(Loihi1SimCfg):
 #@st.cache(ttl=24*3600)
 #@st.cache(suppress_st_warning=True)
 
-def third_model_to_cache():
+def third_model_to_cache(network_params_balanced,run_cond):
     rcfg = CustomRunConfigFloat(select_tag='lif_neurons', select_sub_proc_model=True)
 
     # Instantiating network and IO processes.
@@ -668,12 +668,17 @@ def third_model_to_cache():
     lif_network_balanced.stop()
     return (data_v_balanced,data_u_balanced,spks_balanced)
 
-(data_v_balanced,data_v_balanced,spks_balanced)=third_model_to_cache()
+network_params_balanced['weights'] = generate_gaussian_weights(dim,
+                                                                num_neurons_exc,
+                                                                network_params_balanced['q_factor'],
+                                                                network_params_balanced['g_factor'])
 
-st.markdown("""Visualizing the activity
-First, we visually inspect to spiking activity of the neurons in the network.<br>
-To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
-""")
+(data_v_balanced,data_v_balanced,spks_balanced)=third_model_to_cache(network_params_balanced)
+if intro==str("Yes"):
+    st.markdown("""Visualizing the activity
+    First, we visually inspect to spiking activity of the neurons in the network.<br>
+    To this end, we display neurons on the vertical axis and mark the time step when a neuron spiked.
+    """)
 
 
     
