@@ -461,7 +461,7 @@ else:
 
         return weights
 
-    def first_model_to_cache():
+    def first_model_to_cache(num_steps):
         # Generate weights and store them in parameter dictionary.
         network_params_balanced["weights"] = generate_gaussian_weights(
             dim,
@@ -600,7 +600,7 @@ else:
         """
         )
 
-    def second_model_to_cache():
+    def second_model_to_cache(num_steps):
         # Defining new, larger q_factor.
         q_factor = np.sqrt(dim / 6)
 
@@ -615,7 +615,7 @@ else:
         )
 
         # Configurations for execution.
-        num_steps = 1000
+        #num_steps = 1000
         rcfg = Loihi1SimCfg(select_tag="rate_neurons")
         run_cond = RunSteps(num_steps=num_steps)
 
@@ -763,8 +763,8 @@ else:
         )
 
     # Configurations for execution.
-    num_steps = 1000
-    run_cond = RunSteps(num_steps=num_steps)
+    #num_steps = 1000
+    #run_cond = RunSteps(num_steps=num_steps)
 
     class CustomRunConfigFloat(Loihi1SimCfg):
         def select(self, proc, proc_models):
@@ -778,7 +778,7 @@ else:
             else:
                 return super().select(proc, proc_models)
 
-    def third_model_to_cache(network_params_balanced):
+    def third_model_to_cache(network_params_balanced,num_steps):
         rcfg = CustomRunConfigFloat(
             select_tag="lif_neurons", select_sub_proc_model=True
         )
@@ -822,7 +822,7 @@ else:
 
     start = time.time()
     (data_v_balanced, data_v_balanced, spks_balanced) = third_model_to_cache(
-        network_params_balanced
+        network_params_balanced,num_steps
     )
     stop = time.time()
     sim_m3 = stop - start
@@ -830,8 +830,8 @@ else:
 
 
 
-    def fourth_model():
-        num_steps = 1000
+    def fourth_model(network_params_critical,num_steps):
+
         rcfg = CustomRunConfigFloat(
             select_tag="lif_neurons", select_sub_proc_model=True
         )
@@ -866,7 +866,20 @@ else:
 
         lif_network_critical.stop()
         return spks_critical
-    spks_critical = fourth_model()
+    
+    q_factor = np.sqrt(dim / 6)
+
+    # Changing the strenghts of the recurrent connections.
+    network_params_critical = network_params_balanced.copy()
+    network_params_critical["q_factor"] = q_factor
+    network_params_critical["weights"] = generate_gaussian_weights(
+        dim,
+        num_neurons_exc,
+        network_params_critical["q_factor"],
+        network_params_critical["g_factor"],
+    )
+
+    spks_critical = fourth_model(network_params_critical,num_steps)
 
     if intro == str("Yes"):
         st.markdown(
@@ -983,40 +996,6 @@ else:
             """
             )
 
-        num_steps = 1000
-        rcfg = CustomRunConfigFloat(
-            select_tag="lif_neurons", select_sub_proc_model=True
-        )
-        run_cond = RunSteps(num_steps=num_steps)
-
-        # Creating new new network with changed weights.
-        lif_network_critical = EINetwork(
-            **network_params_critical, convert=True
-        )
-        outport_plug = io.sink.RingBuffer(shape=shape, buffer=num_steps)
-
-        # Instantiate Monitors to record the voltage and the current of the LIF neurons
-        monitor_v = Monitor()
-        monitor_u = Monitor()
-
-        lif_network_critical.outport.connect(outport_plug.a_in)
-        monitor_v.probe(target=lif_network_critical.state, num_steps=num_steps)
-        monitor_u.probe(
-            target=lif_network_critical.state_alt, num_steps=num_steps
-        )
-
-        lif_network_critical.run(condition=run_cond, run_cfg=rcfg)
-
-        #st.markdown("""Fetching spiking activity.""")
-        spks_critical = outport_plug.data.get()
-        data_v_critical = monitor_v.get_data()[lif_network_critical.name][
-            lif_network_critical.state.name
-        ]
-        data_u_critical = monitor_u.get_data()[lif_network_critical.name][
-            lif_network_critical.state_alt.name
-        ]
-
-        lif_network_critical.stop()
 
         # @st.cache
         def plot5(spks_critical) -> None:
