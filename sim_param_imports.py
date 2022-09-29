@@ -13,7 +13,7 @@ from lava.magma.core.model.py.model import PyLoihiProcessModel
 from lava.magma.core.model.sub.model import AbstractSubProcessModel
 
 # Import execution protocol.
-from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
+#from lava.magma.core.sync.protocols.loihi_protocol import LoihiProtocol
 
 # Import decorators.
 from lava.magma.core.decorator import implements, tag, requires
@@ -78,7 +78,7 @@ class EINetwork(AbstractProcess):
         self.outport = OutPort(shape=(full_shape,))
 
 
-@implements(proc=EINetwork, protocol=LoihiProtocol)
+@implements(proc=EINetwork)#, protocol=LoihiProtocol)
 @tag(
     "rate_neurons"
 )  # Tag allows for easy selection of ProcessModel in case multiple are defined.
@@ -398,7 +398,7 @@ def second_model_to_cache(num_steps, dim):
 # states_critical = second_model_to_cache()
 
 
-@implements(proc=EINetwork, protocol=LoihiProtocol)
+@implements(proc=EINetwork)#, protocol=LoihiProtocol)
 @tag("lif_neurons")
 class SubEINetworkModel(AbstractSubProcessModel):
     def __init__(self, proc):
