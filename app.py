@@ -6,20 +6,30 @@ import pandas as pd
 import glob
 
 files = glob.glob("*.p")
-st.markdown(files)
 
+st.markdown("# the List of Data Files:")
+st.write(pd.DataFrame(pd.Series(files)).T)
+labels = "tables or spike_raster?"
+options = ["spk","tb"]
+radio_out = st.radio(labels,options)
 list_of_spike_file_contents = []
 for f in files:
     with open(f,"rb") as f:
-        list_of_spike_file_contents.append(pickle.load(f))
+        file_contents = pickle.load(f)
+        if len(file_contents[1].keys())>98:
+            list_of_spike_file_contents.append(file_contents)
 
 
 
 def wrangle_frame(frame)->None:
     for c in frame.columns:
         frame[c].values[:] = pd.Series(frame[c])
-    st.write(frame)
 
+    temp = frame.T
+    if len(temp.columns)<2:       
+        st.write(frame.T)
+    else:
+        st.markdown("""Print data not available""")
 
 def plot_raster(spike_dict)->None:
     fig = plt.figure()
@@ -36,11 +46,9 @@ def wrangle(spike_dict)->[[]]:
         list_of_lists.append(times)
         if np.max(times)> maxt:
             maxt = np.max(times)
-    st.markdown("Dimensions are: ")
-    st.markdown("Number of cells:")
+    st.markdown("## The Dimensions are as follows, Number of cells:")
     st.markdown(np.shape(list_of_lists))
-    st.markdown("Simulation Time Duration (ms):")
-
+    st.markdown("## Simulation Time Duration (ms):")
     st.markdown(maxt)
     return list_of_lists
 
@@ -51,11 +59,14 @@ st.markdown("[Link to Code That Generated The Plots:](https://github.com/russell
 spikes_in_list_of_lists_of_lists = []
 
 for i in list_of_spike_file_contents:
-    st.markdown("# The data as a table:")
-    wrangle_frame(i[0])
-
-    st.markdown("# The raster plot:")
-    plot_raster(i[1])
+    if radio_out == "tb":
+        st.markdown("### The spike raster plot matrix as a table (column items cell index, row items spike times):")
+        wrangle_frame(i[0])
+    if radio_out == "spk":
+        st.markdown("# The raster plot:")
+        plot_raster(i[1])
+    import pdb
+    pdb.set_trace()
     spikes_in_list_of_lists_of_lists.append(wrangle(i[1]))
 
 
