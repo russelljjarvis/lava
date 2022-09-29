@@ -7,6 +7,7 @@ import glob
 
 files = glob.glob("*.p")
 st.markdown(files)
+
 list_of_spike_file_contents = []
 for f in files:
     with open(f,"rb") as f:
@@ -36,7 +37,10 @@ def wrangle(spike_dict)->[[]]:
         if np.max(times)> maxt:
             maxt = np.max(times)
     st.markdown("Dimensions are: ")
+    st.markdown("Number of cells:")
     st.markdown(np.shape(list_of_lists))
+    st.markdown("Simulation Time Duration (ms):")
+
     st.markdown(maxt)
     return list_of_lists
 
