@@ -12,6 +12,11 @@ st.write(pd.DataFrame(pd.Series(files)).T)
 labels = "tables or spike_raster?"
 options = ["spk","tb"]
 radio_out = st.radio(labels,options)
+
+labels = "regime: balanced, critical, critical_fixed?"
+options = ["balanced","critical","critical_fixed"]
+radio_out_r = st.radio(labels,options)
+
 dict_of_spike_file_contents = {}
 dict_of_spike_file_contents.setdefault('balanced', [])
 dict_of_spike_file_contents.setdefault('critical', [])
@@ -22,11 +27,14 @@ for f in files:
         file_contents = pickle.load(fto)
         if len(file_contents[1].keys())>98:
             if str("pickle_0_") in f:
-                dict_of_spike_file_contents["balanced"].append(file_contents)
+                if radio_out_r=="balanced":
+                    dict_of_spike_file_contents["balanced"].append(file_contents)
             if str("pickle_1_") in f:
-                dict_of_spike_file_contents["critical"].append(file_contents)
+                if radio_out_r=="critical":
+                    dict_of_spike_file_contents["critical"].append(file_contents)
             if str("pickle_2_") in f:
-                dict_of_spike_file_contents["critical_fixed"].append(file_contents)
+                if radio_out_r=="critical_fixed":
+                    dict_of_spike_file_contents["critical_fixed"].append(file_contents)
 
 
 
