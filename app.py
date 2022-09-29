@@ -12,12 +12,21 @@ st.write(pd.DataFrame(pd.Series(files)).T)
 labels = "tables or spike_raster?"
 options = ["spk","tb"]
 radio_out = st.radio(labels,options)
-list_of_spike_file_contents = []
+dict_of_spike_file_contents = {}
+dict_of_spike_file_contents.setdefault('balanced', [])
+dict_of_spike_file_contents.setdefault('critical', [])
+dict_of_spike_file_contents.setdefault('critical_fixed', [])
+
 for f in files:
-    with open(f,"rb") as f:
-        file_contents = pickle.load(f)
+    with open(f,"rb") as fto:
+        file_contents = pickle.load(fto)
         if len(file_contents[1].keys())>98:
-            list_of_spike_file_contents.append(file_contents)
+            if str("pickle_0_") in f:
+                dict_of_spike_file_contents["balanced"].append(file_contents)
+            if str("pickle_1_") in f:
+                dict_of_spike_file_contents["critical"].append(file_contents)
+            if str("pickle_2_") in f:
+                dict_of_spike_file_contents["critical_fixed"].append(file_contents)
 
 
 
@@ -58,16 +67,17 @@ st.markdown("[Link to Code That Generated The Plots:](https://github.com/russell
 
 spikes_in_list_of_lists_of_lists = []
 
-for i in list_of_spike_file_contents:
-    if radio_out == "tb":
-        st.markdown("### The spike raster plot matrix as a table (column items cell index, row items spike times):")
-        wrangle_frame(i[0])
-    if radio_out == "spk":
-        st.markdown("# The raster plot:")
-        plot_raster(i[1])
-    import pdb
-    pdb.set_trace()
-    spikes_in_list_of_lists_of_lists.append(wrangle(i[1]))
+for keys,values in dict_of_spike_file_contents.items():
+    for x in values:
+        st.markdown("Regime: "+str(keys))
+        #st.markdown(v)
+        if radio_out == "tb":
+            st.markdown("### The spike raster plot matrix as a table (column items cell index, row items spike times):")
+            wrangle_frame(x[0])
+        if radio_out == "spk":
+            st.markdown("# The raster plot:")
+            plot_raster(x[1])
+        spikes_in_list_of_lists_of_lists.append(wrangle(x[1]))
 
 
 def compute_ISI(spks):
